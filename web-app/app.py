@@ -107,6 +107,7 @@ def home():
 
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
     """render dashboard page"""
     return render_template("dashboard.html")

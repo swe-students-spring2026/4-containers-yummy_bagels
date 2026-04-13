@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
+  Logged in as {{ current_user.email }}.
+  <a href="{{ url_for('logout') }}">Logout</a>
+{% endblock %}

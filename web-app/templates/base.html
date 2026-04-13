@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}yummy_bagels{% endblock %}</title>
     <link href="css/style.css" rel="stylesheet">
   </head>
   <body>
     <header>
-      <h1>My Dashboard</h1>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/dashboard">Dashboard</a>
-      </nav>
+      {% if current_user.is_authenticated %}
+        <nav>
+          <a href="/">Home</a>
+          <a href="/dashboard">Dashboard</a>
+        </nav>
+      {% endif %}
     </header>
     <main>
       {% block content %}{% endblock %}

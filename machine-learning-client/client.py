@@ -1,9 +1,10 @@
-from deepface import DeepFace
-import numpy as np
-import cv2
-from flask import Flask, jsonify, request
-from pymongo import MongoClient
 import os
+import cv2
+from deepface import DeepFace
+from flask import Flask, jsonify, request
+import numpy as np
+from pymongo import MongoClient
+
 
 app = Flask(__name__)
 
@@ -17,19 +18,18 @@ for member in db.faculty.find():
     with open(filepath, "wb") as f:
         f.write(member["photo"])
 
-        
-
 @app.post("/find-lookalike")
 def find():
     file_bytes_1 = request.files["img1"].read()
-    
+
     input_img = cv2.imdecode(np.frombuffer(file_bytes_1, np.uint8), cv2.IMREAD_COLOR)
 
     results = DeepFace.find(img_path = input_img, db_path="faculty_images/", similarity_search=True,k=3,)
 
     top_match = results[0].iloc[0]
+
     matched_name = os.path.basename(top_match["identity"]).replace("_", " ").replace(".jpg", "")
-    distance = top_match["distance"]
+    #distance = top_match["distance"]
 
     return matched_name
 

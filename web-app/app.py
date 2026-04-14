@@ -85,7 +85,7 @@ def signup():
         if db.users.find_one({"email": email}):
             return render_template("signup.html", error="Email already taken.")
 
-        db.users.insert_one({"email": email, "password": password, "saved_recipes": []})
+        db.users.insert_one({"email": email, "password": password})
 
         return redirect(url_for("login"))
     return render_template("signup.html")

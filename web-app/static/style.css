@@ -32,11 +32,14 @@ body {
   text-decoration: underline;
 }
 
-main {
-  margin-top: 0;
-}
+
 
 /* offset for navbar when logged in*/
-body.with-navbar main {
+main {
   margin-top: 60px; /* navbar height */
+}
+
+/* ===== LOGIN / SIGNUP ===== */
+.authentication main{
+  margin-top: 0;
 }

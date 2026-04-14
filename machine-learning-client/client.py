@@ -1,7 +1,11 @@
+"""
+Machine Learning Client
+"""
+
 import os
 import cv2
 from deepface import DeepFace
-from flask import Flask, jsonify, request
+from flask import Flask, request
 import numpy as np
 from pymongo import MongoClient
 
@@ -20,11 +24,17 @@ for member in db.faculty.find():
 
 @app.post("/find-lookalike")
 def find():
+    """
+    Take image from user and compare it to NYU Courant faculty
+    """
     file_bytes_1 = request.files["img1"].read()
 
     input_img = cv2.imdecode(np.frombuffer(file_bytes_1, np.uint8), cv2.IMREAD_COLOR)
 
-    results = DeepFace.find(img_path = input_img, db_path="faculty_images/", similarity_search=True,k=3,)
+    results = DeepFace.find(img_path = input_img,
+                            db_path="faculty_images/",
+                            similarity_search=True,
+                            k=3,)
 
     top_match = results[0].iloc[0]
 

@@ -85,7 +85,7 @@ def signup():
         if db.users.find_one({"email": email}):
             return render_template("signup.html", error="Email already taken.")
 
-        db.users.insert_one({"email": email, "password": password})
+        db.users.insert_one({"email": email, "password": password, "saved_recipes": []})
 
         return redirect(url_for("login"))
     return render_template("signup.html")
@@ -113,7 +113,7 @@ def home():
         if action == "submit_image":
             # TODO: handle picture upload
             status_message = "Image submit button clicked"
-        
+
         elif action == "find_match":
             # TODO: send picture to ML client for match and accept returned image
             status_message = "Find face match button clicked"

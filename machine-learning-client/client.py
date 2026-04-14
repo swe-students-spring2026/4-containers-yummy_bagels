@@ -1,6 +1,7 @@
 """
 Machine Learning Client
 """
+# pylint: disable=no-member
 
 import os
 import cv2

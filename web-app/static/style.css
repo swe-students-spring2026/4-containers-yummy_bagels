@@ -1,3 +1,38 @@
-.something{
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
 
+/* NAVBAR */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #222;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+/* nav-button(left aligned) */
+.nav-left a {
+  color: white;
+  text-decoration: none;
+  margin-right: 20px;
+  font-weight: bold;
+}
+
+/* hover effect */
+.nav-left a:hover {
+  text-decoration: underline;
+}
+
+/* prevent content hiding under navbar */
+main {
+  margin-top: 60px; /* offsets by navbar height*/
 }

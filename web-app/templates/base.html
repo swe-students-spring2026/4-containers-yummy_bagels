@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="css/style.css" rel="stylesheet">
-  </head>
-  <body>
-    <header>
-      {% if current_user.is_authenticated %}
-        <nav>
-          <a href="/">Home</a>
-          <a href="/dashboard">Dashboard</a>
-        </nav>
-      {% endif %}
-    </header>
-    <main>
-      {% block content %}{% endblock %}
-    </main>
-  </body>
-</html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+  <header>
+    {% if current_user.is_authenticated %}
+    <nav class="navbar">
+      <div class="nav-left">
+        <a href="/">Home</a>
+        <a href="/dashboard">Dashboard</a>
+      </div>
+    </nav>
+    {% endif %}
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
 
+</html>

@@ -12,7 +12,6 @@ An application that matches a user's uploaded image to the most similar NYU prof
 ## 👥 Team
 
 - [Cary Ho](https://github.com/CakeOfThePans)
-- [Luke Sribhud](https://github.com/LukeySan)
 <!-- Add name/githubs here -->
 
 ---

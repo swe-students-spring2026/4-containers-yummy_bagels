@@ -85,7 +85,7 @@ def signup():
         if db.users.find_one({"email": email}):
             return render_template("signup.html", error="Email already taken.")
 
-        db.users.insert_one({"email": email, "password": password})
+        db.users.insert_one({"email": email, "password": password, "saved_recipes": []})
 
         return redirect(url_for("login"))
     return render_template("signup.html")
@@ -102,8 +102,28 @@ def logout():
 @app.route("/")
 @login_required
 def home():
-    """Home page, in progress"""
-    return render_template("home.html")
+    """render home page"""
+    uploaded_image_url = None
+    matched_professor_image_url = None
+    status_message = None
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "submit_image":
+            # TODO: handle picture upload
+            status_message = "Image submit button clicked"
+
+        elif action == "find_match":
+            # TODO: send picture to ML client for match and accept returned image
+            status_message = "Find face match button clicked"
+
+    return render_template(
+        "home.html",
+        uploaded_image_url=uploaded_image_url,
+        matched_professor_image_url=matched_professor_image_url,
+        status_message=status_message,
+    )
 
 
 @app.route("/dashboard")

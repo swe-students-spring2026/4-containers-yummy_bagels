@@ -12,7 +12,9 @@ An application that matches a user's uploaded image to the most similar NYU prof
 
 - [Cary Ho](https://github.com/CakeOfThePans)
 - [Albert Chen](https://github.com/azc9673)
-<!-- Add name/githubs here -->
+- [Luke Sribhud](https://github.com/LukeySan)
+- [Joy Song](https://github.com/pancake0003)
+- [Chen Chen](https://github.com/LoganHund)
 
 ---
 

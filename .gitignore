@@ -139,6 +139,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+#Faculty Images
+machine-learning-client/faculty_images/
+
 # Pyre type checker
 .pyre/
 

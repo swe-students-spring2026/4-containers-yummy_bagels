@@ -1,6 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-  Logged in as {{ current_user.email }}.
-  <a href="{{ url_for('logout') }}">Logout</a>
+  <section id="profile-button-container">
+    <a href="{{ url_for('dashboard') }}">
+      <button type="button">View Profile</button>
+    </a>
+  </section>
+
+  <section>
+    <h1>Professor Face Match</h1>
+    <p>Upload a selfie to find the professor you look like most.</p>
+  </section>
+
+   <section id="selfie-upload-section">
+    <h2>Submit Your Image</h2>
+    <form>
+      <input type="file" id="selfie-upload" name="selfie-upload" accept="image/*">
+      <button type="submit">Submit Image</button>
+    </form>
+  </section>
+
+  <section id="selfie-preview-section">
+    <h2>Your Uploaded Image</h2>
+    <div id="selfie-preview-container">
+      <img id="selfie-preview" src="" alt="Your uploaded selfie will appear here.">
+    </div>
+  </section>
+
+  <section id="match-action-section">
+    <button type="button" id="find-match-button">Find Professor Face Match</button>
+  </section>
+
+  <section id="match-result-section">
+    <h2>Matched Professor</h2>
+    <div id="matched-professor-container">
+      <img id="matched-professor-image" src="" alt="The matched professor image will appear here.">
+    </div>
+  </section>
 {% endblock %}

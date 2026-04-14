@@ -32,7 +32,11 @@ body {
   text-decoration: underline;
 }
 
-/* prevent content hiding under navbar */
 main {
-  margin-top: 60px; /* offsets by navbar height*/
+  margin-top: 0;
+}
+
+/* offset for navbar when logged in*/
+body.with-navbar main {
+  margin-top: 60px; /* navbar height */
 }

@@ -1,19 +1,15 @@
 """Web app for the project"""
 
-import os
-import uuid
-import re
-import unicodedata
-import requests
 import base64
 from io import BytesIO
+import os
+import requests
 from flask import (
     Flask,
     render_template,
     request,
     redirect,
     url_for,
-    send_from_directory,
 )
 from flask_login import (
     LoginManager,
@@ -213,7 +209,9 @@ def home():
 
                     status_message = "Match found."
                 else:
-                    status_message = f"Match found, but no faculty image stored for {matched_name}."
+                    status_message = (
+                        f"Match found, but no faculty image stored for {matched_name}."
+                    )
             else:
                 status_message = f"ML service error: {response.status_code}"
 

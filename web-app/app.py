@@ -25,9 +25,7 @@ client = MongoClient(
     connectTimeoutMS=3000,
     socketTimeoutMS=5000,
 )
-client.server_info()  # force connection check
 db = client[mongo_dbname]
-print("Connected to MongoDB successfully.")
 
 # Flask login setup
 login_manager = LoginManager()
@@ -134,4 +132,4 @@ def dashboard():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000, host="0.0.0.0")

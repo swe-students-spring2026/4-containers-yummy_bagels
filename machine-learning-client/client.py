@@ -10,11 +10,23 @@ from deepface import DeepFace
 from flask import Flask, request
 import numpy as np
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
-client = MongoClient("mongodb://mongodb:27017")
-db = client["yummy_bagels"]
+mongo_uri = os.getenv("MONGO_URI")
+mongo_dbname = os.getenv("MONGO_DBNAME", "yummy_bagels")
+if not mongo_uri:
+    raise RuntimeError("MONGO_URI must be set in .env to connect to MongoDB.")
+client = MongoClient(
+    mongo_uri,
+    serverSelectionTimeoutMS=3000,
+    connectTimeoutMS=3000,
+    socketTimeoutMS=5000,
+)
+db = client[mongo_dbname]
 
 os.makedirs("faculty_images", exist_ok=True)
 for member in db.faculty.find():
@@ -51,4 +63,4 @@ def find():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001, host="0.0.0.0")

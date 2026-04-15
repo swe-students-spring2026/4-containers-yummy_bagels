@@ -19,41 +19,159 @@ An application that matches a user's uploaded image to the most similar NYU prof
 
 ---
 
-## ⚙️ Setup Instructions
+## Option 1: Quick Start (Recommended)
 
-### 1. Clone the Repository
+### Prerequisites
+- Docker Desktop installed and running
+
+---
+
+### Run the full system
 
 ```bash
-git clone https://github.com/swe-students-spring2026/4-containers-yummy_bagels.git
+docker compose up --build
 ```
 
-## 2. Environment Variables
+Optional (background mode):
 
-Create a `.env` file using the env.example file inside the web-app folder.
-
----
-
-## 3. Database Setup
-
-Install Docker if not already installed.
-
-Then run:
-
-```
-docker run --name mongodb_dockerhub -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret -d mongo:latest
+```bash
+docker compose up --build -d
 ```
 
-The resulting Mongo URI is:
+Stop everything:
 
-```
-mongodb://admin:secret@localhost:27017/
+```bash
+docker compose down
 ```
 
 ---
 
-## 4. Run the Web App
+### Note:
 
+If the seeding function did not work properly then while the containers are still up, run:
+
+```bash
+docker compose exec machine-learning-client python scrape_prof.py
 ```
+
+and restart the containers:
+
+```bash
+docker compose down
+docker compose up
+```
+
+## Access the Services
+
+- Web App → http://localhost:5000
+
+---
+
+## Option 2: Running Services Individually
+
+### MongoDB
+
+```bash
+docker run -d \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=secret \
+  mongo:latest
+```
+
+---
+
+### Web App
+
+```bash
+docker build -t web-app ./web-app
+
+docker run -p 5000:5000 \
+  -e MONGO_URI="mongodb://admin:secret@localhost:27017/" \
+  -e MONGO_DBNAME=yummy_bagels \
+  -e SECRET_KEY=dev \
+  web-app
+```
+
+---
+
+### ML Client
+
+```bash
+docker build -t machine-learning-client ./machine-learning-client
+
+docker run -p 5001:5001 \
+  -e MONGO_URI="mongodb://admin:secret@localhost:27017/" \
+  -e MONGO_DBNAME=yummy_bagels \
+  ml-client
+```
+
+---
+
+## Option 3: Run Locally Without Docker (for Development)
+
+### 1. Start MongoDB
+
+```bash
+docker run -d \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=secret \
+  mongo:latest
+```
+
+---
+
+### 2. Setup Web App
+
+```bash
 cd web-app
+
+pip install pipenv
+
+pipenv shell
+```
+
+Set environment variables. An example file named `env.example` is given. Copy this into a file named `.env`:
+
+```bash
+export MONGO_URI="mongodb://admin:secret@localhost:27017/"
+export MONGO_DBNAME=yummy_bagels
+export SECRET_KEY=dev
+```
+
+Run:
+
+```bash
 python app.py
 ```
+
+---
+
+### 3. Setup ML Client
+
+```bash
+cd machine-learning-client
+
+pip install pipenv
+
+pipenv shell
+```
+
+Set environment variables. An example file named `env.example` is given. Copy this into a file named `.env`:
+
+```bash
+export MONGO_URI="mongodb://admin:secret@localhost:27017/"
+export MONGO_DBNAME=yummy_bagels
+```
+
+Run:
+
+```bash
+python scrape_prof.py
+python client.py
+```
+
+`scrape_prof.py` is a seeding function for the database.
+
+---

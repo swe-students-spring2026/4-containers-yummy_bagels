@@ -11,6 +11,7 @@ pymongo = "*"
 flask-login = "*"
 dotenv = "*"
 tomli = "*"
+requests = "*"
 
 [dev-packages]
 

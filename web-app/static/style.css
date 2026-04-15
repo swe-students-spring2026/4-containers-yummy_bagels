@@ -16,7 +16,7 @@ body {
   align-items: center;
   padding: 12px 20px;
   box-sizing: border-box;
-  z-index: 1000;
+  z-index: 1000;          
 }
 
 /* nav-button(left aligned) */
@@ -39,7 +39,11 @@ main {
   margin-top: 60px; /* navbar height */
 }
 
-/* ===== LOGIN / SIGNUP ===== */
-.authentication main{
-  margin-top: 0;
+/* =================================== LOGIN / SIGNUP =================================== */
+
+main.authentication{
+  margin-top: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

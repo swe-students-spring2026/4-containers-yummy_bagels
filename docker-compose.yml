@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  web-app:
+    build:
+      context: ./web-app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URI: mongodb://admin:secret@mongodb:27017/
+      MONGO_DBNAME: yummy_bagels
+      SECRET_KEY: dev
+
+  machine-learning-client:
+    build:
+      context: ./machine-learning-client
+    ports:
+      - "5001:5001"
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URI: mongodb://admin:secret@mongodb:27017/
+      MONGO_DBNAME: yummy_bagels
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:

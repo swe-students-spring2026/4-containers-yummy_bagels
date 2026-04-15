@@ -7,17 +7,12 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
-# Install OpenCV dependencies (linux package not python package)
-RUN apt-get update && apt-get install -y \
-    libgl1 \
-    && rm -rf /var/lib/apt/lists/*
-
 # the ADD command is how you add files from your local machine into a Docker image
 # Copy the current directory contents into the container at /app
 ADD . .
 
 # expose the port that the Flask app is running on
-EXPOSE 5001
+EXPOSE 5000
 
-# Run client.py when the container launches
-CMD ["sh", "-c", "python scrape_prof.py && python client.py"]
+# Run app.py when the container launches
+CMD ["python", "app.py"]

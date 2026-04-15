@@ -1,8 +1,25 @@
 """Web app for the project"""
 
+import base64
+from io import BytesIO
 import os
-from flask import Flask, render_template, request, redirect, url_for
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
+import requests
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+)
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    login_user,
+    logout_user,
+    login_required,
+    current_user,
+)
+from werkzeug.utils import secure_filename
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from dotenv import load_dotenv
@@ -13,6 +30,10 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev")
+
+# config for image uplaoding
+ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "http://localhost:5001/find-lookalike")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
 # MongoDB connection
 mongo_uri = os.getenv("MONGO_URI")
@@ -25,9 +46,7 @@ client = MongoClient(
     connectTimeoutMS=3000,
     socketTimeoutMS=5000,
 )
-client.server_info()  # force connection check
 db = client[mongo_dbname]
-print("Connected to MongoDB successfully.")
 
 # Flask login setup
 login_manager = LoginManager()
@@ -55,6 +74,11 @@ def load_user(user_id):
     except (InvalidId, ValueError):
         pass
     return None
+
+
+def allowed_file(filename):
+    """Returns true if the image extension is allowed (png, jpg, jpeg)"""
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -99,29 +123,108 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 @login_required
 def home():
-    """render home page"""
-    uploaded_image_url = None
-    matched_professor_image_url = None
+    """Render home page and show uploaded image + matched professor image from MongoDB."""
+    uploaded_image_base64 = None
+    uploaded_image_mime = None
+    matched_professor_image_base64 = None
+    matched_professor_image_mime = "image/jpeg"
+    matched_name = None
     status_message = None
 
     if request.method == "POST":
-        action = request.form.get("action")
+        uploaded_file = request.files.get("image")
 
-        if action == "submit_image":
-            # TODO: handle picture upload
-            status_message = "Image submit button clicked"
+        if not uploaded_file or uploaded_file.filename == "":
+            status_message = "Please choose an image file"
+            return render_template(
+                "home.html",
+                uploaded_image_base64=uploaded_image_base64,
+                uploaded_image_mime=uploaded_image_mime,
+                matched_professor_image_base64=matched_professor_image_base64,
+                matched_professor_image_mime=matched_professor_image_mime,
+                matched_name=matched_name,
+                status_message=status_message,
+            )
 
-        elif action == "find_match":
-            # TODO: send picture to ML client for match and accept returned image
-            status_message = "Find face match button clicked"
+        if not allowed_file(uploaded_file.filename):
+            status_message = "Only PNG, JPG, and JPEG files are allowed"
+            return render_template(
+                "home.html",
+                uploaded_image_base64=uploaded_image_base64,
+                uploaded_image_mime=uploaded_image_mime,
+                matched_professor_image_base64=matched_professor_image_base64,
+                matched_professor_image_mime=matched_professor_image_mime,
+                matched_name=matched_name,
+                status_message=status_message,
+            )
+
+        original_name = secure_filename(uploaded_file.filename)
+        image_bytes = uploaded_file.read()
+        uploaded_image_mime = uploaded_file.mimetype or "image/jpeg"
+
+        # store uploaded image in MongoDB
+        db.images.insert_one(
+            {
+                "user_id": current_user.id,
+                "filename": original_name,
+                "content_type": uploaded_image_mime,
+                "photo": image_bytes,
+            }
+        )
+
+        # prepare uploaded image for template
+        uploaded_image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+        try:
+            response = requests.post(
+                ML_SERVICE_URL,
+                files={
+                    "img1": (
+                        original_name,
+                        BytesIO(image_bytes),
+                        uploaded_image_mime,
+                    )
+                },
+                timeout=180,
+            )
+
+            if response.status_code == 200:
+                matched_name = response.text.strip()
+
+                faculty_doc = db.faculty.find_one({"name": matched_name})
+
+                if faculty_doc and faculty_doc.get("photo"):
+                    matched_photo_bytes = bytes(faculty_doc["photo"])
+                    matched_professor_image_base64 = base64.b64encode(
+                        matched_photo_bytes
+                    ).decode("utf-8")
+
+                    # if you later store faculty content type, use that instead
+                    matched_professor_image_mime = faculty_doc.get(
+                        "content_type", "image/jpeg"
+                    )
+
+                    status_message = "Match found."
+                else:
+                    status_message = (
+                        f"Match found, but no faculty image stored for {matched_name}."
+                    )
+            else:
+                status_message = f"ML service error: {response.status_code}"
+
+        except requests.RequestException as exc:
+            status_message = f"Could not connect to ML service: {exc}"
 
     return render_template(
         "home.html",
-        uploaded_image_url=uploaded_image_url,
-        matched_professor_image_url=matched_professor_image_url,
+        uploaded_image_base64=uploaded_image_base64,
+        uploaded_image_mime=uploaded_image_mime,
+        matched_professor_image_base64=matched_professor_image_base64,
+        matched_professor_image_mime=matched_professor_image_mime,
+        matched_name=matched_name,
         status_message=status_message,
     )
 
@@ -134,4 +237,4 @@ def dashboard():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000, host="0.0.0.0")

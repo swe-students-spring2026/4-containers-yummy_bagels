@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  web-app:
+    build:
+      context: ./web-app
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://admin:secret@mongodb:27017/?authSource=admin
+      MONGO_DBNAME: yummy_bagels
+      SECRET_KEY: dev
+      ML_SERVICE_URL: http://machine-learning-client:5001/find-lookalike
+
+  machine-learning-client:
+    build:
+      context: ./machine-learning-client
+    ports:
+      - "5001:5001"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://admin:secret@mongodb:27017/?authSource=admin
+      MONGO_DBNAME: yummy_bagels
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "admin", "--password", "secret", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  mongodb_data:

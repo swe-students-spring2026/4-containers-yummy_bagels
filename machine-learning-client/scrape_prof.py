@@ -1,5 +1,7 @@
 """NYU Courant Faculty Scraper"""
 
+# pylint: disable=R0801
+
 import os
 from urllib.parse import urljoin
 import requests

@@ -44,6 +44,12 @@ Stop everything:
 docker compose down
 ```
 
+Optional (Stop everything and remove volumes):
+
+```bash
+docker compose down -v
+```
+
 ---
 
 ### Note:
@@ -61,6 +67,9 @@ docker compose down
 docker compose up
 ```
 
+After starting the system, wait 10–20 seconds before using the web app.
+This allows the ML service to seed the database. Using the app too early may result in missing data or errors.
+
 ## Access the Services
 
 - Web App → http://localhost:5000
@@ -72,11 +81,7 @@ docker compose up
 ### MongoDB
 
 ```bash
-docker run -d \
-  -p 27017:27017 \
-  -e MONGO_INITDB_ROOT_USERNAME=admin \
-  -e MONGO_INITDB_ROOT_PASSWORD=secret \
-  mongo:latest
+docker run --name mongodb -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret -d mongo:latest
 ```
 
 ---
@@ -86,11 +91,7 @@ docker run -d \
 ```bash
 docker build -t web-app ./web-app
 
-docker run -p 5000:5000 \
-  -e MONGO_URI="mongodb://admin:secret@localhost:27017/" \
-  -e MONGO_DBNAME=yummy_bagels \
-  -e SECRET_KEY=dev \
-  web-app
+docker run -p 5000:5000 --name web-app -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/?authSource=admin" -e MONGO_DBNAME=yummy_bagels -e SECRET_KEY=dev -e ML_SERVICE_URL=http://host.docker.internal:5001/find-lookalike web-app
 ```
 
 ---
@@ -100,10 +101,7 @@ docker run -p 5000:5000 \
 ```bash
 docker build -t machine-learning-client ./machine-learning-client
 
-docker run -p 5001:5001 \
-  -e MONGO_URI="mongodb://admin:secret@localhost:27017/" \
-  -e MONGO_DBNAME=yummy_bagels \
-  ml-client
+docker run -p 5001:5001 --name machine-learning-client -e MONGO_URI="mongodb://admin:secret@host.docker.internal:27017/?authSource=admin" -e MONGO_DBNAME=yummy_bagels machine-learning-client
 ```
 
 ---
@@ -113,11 +111,7 @@ docker run -p 5001:5001 \
 ### 1. Start MongoDB
 
 ```bash
-docker run -d \
-  -p 27017:27017 \
-  -e MONGO_INITDB_ROOT_USERNAME=admin \
-  -e MONGO_INITDB_ROOT_PASSWORD=secret \
-  mongo:latest
+docker run --name mongodb -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=secret -d mongo:latest
 ```
 
 ---
@@ -135,9 +129,10 @@ pipenv shell
 Set environment variables. An example file named `env.example` is given. Copy this into a file named `.env`:
 
 ```bash
-export MONGO_URI="mongodb://admin:secret@localhost:27017/"
-export MONGO_DBNAME=yummy_bagels
-export SECRET_KEY=dev
+MONGO_URI="mongodb://admin:secret@localhost:27017/?authSource=admin"
+MONGO_DBNAME=yummy_bagels
+SECRET_KEY=dev
+ML_SERVICE_URL=http://localhost:5001/find-lookalike
 ```
 
 Run:
@@ -161,8 +156,8 @@ pipenv shell
 Set environment variables. An example file named `env.example` is given. Copy this into a file named `.env`:
 
 ```bash
-export MONGO_URI="mongodb://admin:secret@localhost:27017/"
-export MONGO_DBNAME=yummy_bagels
+MONGO_URI="mongodb://admin:secret@localhost:27017/?authSource=admin"
+MONGO_DBNAME=yummy_bagels
 ```
 
 Run:

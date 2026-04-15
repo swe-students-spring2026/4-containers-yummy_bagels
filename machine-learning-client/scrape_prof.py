@@ -3,10 +3,12 @@
 # pylint: disable=R0801
 
 import os
+import time
 from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,6 +23,16 @@ client = MongoClient(
     connectTimeoutMS=3000,
     socketTimeoutMS=5000,
 )
+for i in range(10):
+    try:
+        client.admin.command("ping")
+        print("Connected to MongoDB")
+        break
+    except ServerSelectionTimeoutError:
+        print(f"MongoDB not ready yet, retrying... ({i+1}/10)")
+        time.sleep(2)
+else:
+    raise RuntimeError("Could not connect to MongoDB after retries.")
 db = client[mongo_dbname]
 
 # Skip if already seeded to avoid duplicates
@@ -49,7 +61,7 @@ for li in faculty_list:
     try:
         db.faculty.update_one(
             {"name": name},
-            {"$set": {"name": name, "photo": img_bytes}},
+            {"$set": {"name": name, "photo": img_bytes, "content_type": "image/jpeg"}},
             upsert=True,
         )
         print(f"Added {name}")

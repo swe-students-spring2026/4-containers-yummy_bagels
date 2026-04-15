@@ -25,13 +25,13 @@
     {% endif %}
   </section>
 
-  {% if uploaded_image_url %}
+  {% if uploaded_image_base64 %}
     <section id="selfie-preview-section">
       <h3>Your Uploaded Image</h3>
       <div id="selfie-preview-container">
         <img
           id="selfie-preview"
-          src="{{ uploaded_image_url }}"
+          src="data:{{ uploaded_image_mime }};base64,{{ uploaded_image_base64 }}"
           alt="Uploaded image"
           width="250"
         >
@@ -45,11 +45,16 @@
     </section>
   {% endif %}
 
-  {% if matched_professor_image_url %}
+  {% if matched_professor_image_base64 %}
     <section id="match-result-section">
       <h3>Matched Professor Image</h3>
       <div id="matched-professor-container">
-        <img id="matched-professor-image" src="{{ matched_professor_image_url }}" alt="Matched professor image" width="250" >
+        <img
+          id="matched-professor-image"
+          src="data:{{ matched_professor_image_mime }};base64,{{ matched_professor_image_base64 }}"
+          alt="Matched professor image"
+          width="250"
+        >
       </div>
     </section>
   {% endif %}

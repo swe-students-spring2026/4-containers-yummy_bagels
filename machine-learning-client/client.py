@@ -4,6 +4,8 @@ Machine Learning Client
 
 # pylint: disable=no-member
 
+import re
+import unicodedata
 import os
 import cv2
 from deepface import DeepFace
@@ -27,6 +29,17 @@ client = MongoClient(
     socketTimeoutMS=5000,
 )
 db = client[mongo_dbname]
+
+
+def safe_filename(name):
+    """helper function to use only unicode for filenames"""
+    normalized = (
+        unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    )
+    normalized = normalized.replace(" ", "_")
+    normalized = re.sub(r"[^A-Za-z0-9_-]", "", normalized)
+    return normalized + ".jpg"
+
 
 
 def dump_faculty_images(database, output_dir):

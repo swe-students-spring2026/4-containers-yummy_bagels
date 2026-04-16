@@ -14,27 +14,43 @@
 
    <section id="selfie-upload-section">
     <h2>Submit Your Image</h2>
-    <form>
-      <input type="file" id="selfie-upload" name="selfie-upload" accept="image/*">
-      <button type="submit">Submit Image</button>
+
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="image" id="image" accept=".png,.jpg,.jpeg" required>
+      <button type="submit">Find Face Match</button>
     </form>
+
+    {% if status_message %}
+      <p>{{ status_message }}</p>
+    {% endif %}
   </section>
 
-  <section id="selfie-preview-section">
-    <h2>Your Uploaded Image</h2>
-    <div id="selfie-preview-container">
-      <img id="selfie-preview" src="" alt="Your uploaded selfie will appear here.">
-    </div>
-  </section>
+  {% if uploaded_image_url %}
+    <section id="selfie-preview-section">
+      <h3>Your Uploaded Image</h3>
+      <div id="selfie-preview-container">
+        <img
+          id="selfie-preview"
+          src="{{ uploaded_image_url }}"
+          alt="Uploaded image"
+          width="250"
+        >
+      </div>
+    </section>
+  {% endif %}
 
-  <section id="match-action-section">
-    <button type="button" id="find-match-button">Find Professor Face Match</button>
-  </section>
+  {% if matched_name %}
+    <section id="match-name-section">
+      <h3>Best match: {{ matched_name }}</h3>
+    </section>
+  {% endif %}
 
-  <section id="match-result-section">
-    <h2>Matched Professor</h2>
-    <div id="matched-professor-container">
-      <img id="matched-professor-image" src="" alt="The matched professor image will appear here.">
-    </div>
-  </section>
+  {% if matched_professor_image_url %}
+    <section id="match-result-section">
+      <h3>Matched Professor Image</h3>
+      <div id="matched-professor-container">
+        <img id="matched-professor-image" src="{{ matched_professor_image_url }}" alt="Matched professor image" width="250" >
+      </div>
+    </section>
+  {% endif %}
 {% endblock %}

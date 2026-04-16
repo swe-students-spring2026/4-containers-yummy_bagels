@@ -82,6 +82,7 @@ def allowed_file(filename):
     """Returns true if the image extension is allowed (png, jpg, jpeg)"""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 def decode_camera_image(data_url):
     """Decode a base64 camera image posted from the homepage."""
     try:
@@ -128,6 +129,7 @@ def extract_uploaded_image():
         return decode_camera_image(camera_image_data)
 
     return None, None, None, "Please choose an image file or take a photo"
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -199,7 +201,7 @@ def home():
                 status_message=status_message,
             )
 
-        #if not allowed_file(uploaded_file.filename):
+        # if not allowed_file(uploaded_file.filename):
         #    status_message = "Only PNG, JPG, and JPEG files are allowed"
         #    return render_template(
         #        "home.html",
@@ -211,9 +213,9 @@ def home():
         #        status_message=status_message,
         #    )
 
-        #original_name = secure_filename(uploaded_file.filename)
-        #image_bytes = uploaded_file.read()
-        #uploaded_image_mime = uploaded_file.mimetype or "image/jpeg" 
+        # original_name = secure_filename(uploaded_file.filename)
+        # image_bytes = uploaded_file.read()
+        # uploaded_image_mime = uploaded_file.mimetype or "image/jpeg"
 
         # store uploaded image in MongoDB
         db.images.insert_one(

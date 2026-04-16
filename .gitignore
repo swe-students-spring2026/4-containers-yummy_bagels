@@ -141,6 +141,7 @@ dmypy.json
 
 # Faculty Images
 machine-learning-client/faculty_images/
+machine-learning-client/tests/faculty_images/
 
 # Pyre type checker
 .pyre/

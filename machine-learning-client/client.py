@@ -6,6 +6,8 @@ Machine Learning Client
 
 import re
 import unicodedata
+import re
+import unicodedata
 import os
 import cv2
 from deepface import DeepFace
@@ -41,13 +43,14 @@ def safe_filename(name):
     return normalized + ".jpg"
 
 
+
 def dump_faculty_images(database, output_dir):
     """
     Pull faculty photos from database and write to disk.
     """
     os.makedirs(output_dir, exist_ok=True)
     for member in database.faculty.find():
-        filename = member["name"].replace(" ", "_") + ".jpg"
+        filename = safe_filename(member["name"])
         filepath = os.path.join(output_dir, filename)
         with open(filepath, "wb") as f:
             f.write(member["photo"])
@@ -94,6 +97,9 @@ def find():
     input_img = decode_image(file_bytes)
     results = find_lookalike(input_img)
 
+    if input_img is None:
+        return "Invalid image file", 400
+
     results = DeepFace.find(
         img_path=input_img,
         db_path="faculty_images/",
@@ -115,11 +121,8 @@ def find():
     # distance = top_match["distance"]
     print(matched_name)
     return {
-        "name" : {
         "name": matched_name,
         "photo" : picture_bytes.hex(),
-    },
-        "photo": picture_bytes.hex(),
     }
 
 

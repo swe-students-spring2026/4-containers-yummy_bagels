@@ -3,9 +3,6 @@ Machine Learning Client
 """
 
 # pylint: disable=no-member
-
-import re
-import unicodedata
 import re
 import unicodedata
 import os
@@ -43,7 +40,6 @@ def safe_filename(name):
     return normalized + ".jpg"
 
 
-
 def dump_faculty_images(database, output_dir):
     """
     Pull faculty photos from database and write to disk.
@@ -54,6 +50,7 @@ def dump_faculty_images(database, output_dir):
         filepath = os.path.join(output_dir, filename)
         with open(filepath, "wb") as f:
             f.write(member["photo"])
+
 
 def convert_to_name(filepath):
     """
@@ -122,7 +119,7 @@ def find():
     print(matched_name)
     return {
         "name": matched_name,
-        "photo" : picture_bytes.hex(),
+        "photo": picture_bytes.hex(),
     }
 
 

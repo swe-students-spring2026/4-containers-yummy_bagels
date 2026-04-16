@@ -69,7 +69,7 @@ class FakeDB:
             self._collections[key] = FakeCollection([])
         return self._collections[key]
 
-    def __getattr__(self,key):
+    def __getattr__(self, key):
         return self[key]
 
 

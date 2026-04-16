@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
   <header>
-    {% if current_user.is_authenticated %}
-    <nav class="navbar">
-      <div class="nav-left">
-        <a href="/">Home</a>
-        <a href="/dashboard">Dashboard</a>
-      </div>
-    </nav>
-    {% endif %}
+    {% block show_navbar %}
+      {% if current_user.is_authenticated %}
+      <nav class="navbar">
+        <div class="nav-left">
+          <a href="/">Home</a>
+          <a href="/dashboard">Dashboard</a>
+        </div>
+      </nav>
+      {% endif %}
+    {% endblock %}
   </header>
   <main class="{% block main_class %}{% endblock %}">
     {% block content %}{% endblock %}

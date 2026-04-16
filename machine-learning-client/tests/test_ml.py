@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pandas as pd
 from client import convert_to_name, decode_image, dump_faculty_images
  # pylint: disable=import-outside-toplevel
+ # pylint: disable=too-few-public-methods
 
 TEST_IMAGE_PATH = os.path.join(os.path.dirname(__file__),"Amos_Bloomberg.jpg")
 with open(TEST_IMAGE_PATH, "rb") as f:

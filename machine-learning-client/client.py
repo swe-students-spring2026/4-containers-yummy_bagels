@@ -103,14 +103,11 @@ def find():
 
     # distance = top_match["distance"]
     print(matched_name)
+
     return {
-        "name" : {
         "name": matched_name,
         "photo" : picture_bytes.hex(),
-    },
-        "photo": picture_bytes.hex(),
     }
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001, host="0.0.0.0")

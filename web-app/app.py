@@ -1,6 +1,7 @@
 """Web app for the project"""
 
 import base64
+import binascii
 from io import BytesIO
 import os
 import requests
@@ -34,6 +35,7 @@ app.secret_key = os.getenv("SECRET_KEY", "dev")
 # config for image uplaoding
 ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "http://localhost:5001/find-lookalike")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+ALLOWED_MIME_TYPES = {"image/png", "image/jpeg"}
 
 # MongoDB connection
 mongo_uri = os.getenv("MONGO_URI")
@@ -80,6 +82,52 @@ def allowed_file(filename):
     """Returns true if the image extension is allowed (png, jpg, jpeg)"""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def decode_camera_image(data_url):
+    """Decode a base64 camera image posted from the homepage."""
+    try:
+        header, encoded = data_url.split(",", 1)
+    except ValueError:
+        return None, None, None, "Camera image data was invalid"
+
+    if not header.startswith("data:image/"):
+        return None, None, None, "Camera image data was invalid"
+
+    mime_type = header[5:].split(";", 1)[0]
+    if mime_type not in ALLOWED_MIME_TYPES:
+        return None, None, None, "Only PNG, JPG, and JPEG files are allowed"
+
+    try:
+        image_bytes = base64.b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError):
+        return None, None, None, "Camera image data was invalid"
+
+    extension = "png" if mime_type == "image/png" else "jpg"
+    return f"camera-capture.{extension}", image_bytes, mime_type, None
+
+
+def extract_uploaded_image():
+    """Accept either a file upload or a homepage camera capture."""
+    uploaded_file = request.files.get("image")
+    if uploaded_file and uploaded_file.filename:
+        if not allowed_file(uploaded_file.filename):
+            return None, None, None, "Only PNG, JPG, and JPEG files are allowed"
+
+        image_bytes = uploaded_file.read()
+        if not image_bytes:
+            return None, None, None, "Uploaded image was empty"
+
+        return (
+            secure_filename(uploaded_file.filename),
+            image_bytes,
+            uploaded_file.mimetype or "image/jpeg",
+            None,
+        )
+
+    camera_image_data = request.form.get("camera_image_data", "").strip()
+    if camera_image_data:
+        return decode_camera_image(camera_image_data)
+
+    return None, None, None, "Please choose an image file or take a photo"
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -135,10 +183,12 @@ def home():
     status_message = None
 
     if request.method == "POST":
-        uploaded_file = request.files.get("image")
+        original_name, image_bytes, uploaded_image_mime, error_message = (
+            extract_uploaded_image()
+        )
 
-        if not uploaded_file or uploaded_file.filename == "":
-            status_message = "Please choose an image file"
+        if error_message:
+            status_message = error_message
             return render_template(
                 "home.html",
                 uploaded_image_base64=uploaded_image_base64,
@@ -149,21 +199,21 @@ def home():
                 status_message=status_message,
             )
 
-        if not allowed_file(uploaded_file.filename):
-            status_message = "Only PNG, JPG, and JPEG files are allowed"
-            return render_template(
-                "home.html",
-                uploaded_image_base64=uploaded_image_base64,
-                uploaded_image_mime=uploaded_image_mime,
-                matched_professor_image_base64=matched_professor_image_base64,
-                matched_professor_image_mime=matched_professor_image_mime,
-                matched_name=matched_name,
-                status_message=status_message,
-            )
+        #if not allowed_file(uploaded_file.filename):
+        #    status_message = "Only PNG, JPG, and JPEG files are allowed"
+        #    return render_template(
+        #        "home.html",
+        #        uploaded_image_base64=uploaded_image_base64,
+        #        uploaded_image_mime=uploaded_image_mime,
+        #        matched_professor_image_base64=matched_professor_image_base64,
+        #        matched_professor_image_mime=matched_professor_image_mime,
+        #        matched_name=matched_name,
+        #        status_message=status_message,
+        #    )
 
-        original_name = secure_filename(uploaded_file.filename)
-        image_bytes = uploaded_file.read()
-        uploaded_image_mime = uploaded_file.mimetype or "image/jpeg"
+        #original_name = secure_filename(uploaded_file.filename)
+        #image_bytes = uploaded_file.read()
+        #uploaded_image_mime = uploaded_file.mimetype or "image/jpeg" 
 
         # store uploaded image in MongoDB
         db.images.insert_one(

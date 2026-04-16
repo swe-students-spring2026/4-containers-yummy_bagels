@@ -52,17 +52,20 @@ def dump_faculty_images(database, output_dir):
         with open(filepath, "wb") as f:
             f.write(member["photo"])
 
+
 def convert_to_name(filepath):
     """
     Convert a faculty image path to a readable name.
     """
-    return os.path.basename(filepath).replace("_"," ").replace(".jpg","")
+    return os.path.basename(filepath).replace("_", " ").replace(".jpg", "")
+
 
 def decode_image(file_bytes):
     """
     Decode image bytes into a numpy array.
     """
     return cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
+
 
 def find_lookalike(img):
     """
@@ -76,7 +79,9 @@ def find_lookalike(img):
     )
     return results
 
-dump_faculty_images(db,"faculty_images")
+
+dump_faculty_images(db, "faculty_images")
+
 
 @app.post("/find-lookalike")
 def find():
@@ -84,8 +89,7 @@ def find():
     Take image from user and compare it to NYU Courant faculty
     """
     if "img1" not in request.files:
-        return {"error":"No image provided"}, 400
-
+        return {"error": "No image provided"}, 400
 
     file_bytes = request.files["img1"].read()
     input_img = decode_image(file_bytes)
@@ -108,13 +112,12 @@ def find():
 
     with open(top_match["identity"], "rb") as f:
         picture_bytes = f.read()
-    
 
     # distance = top_match["distance"]
     print(matched_name)
     return {
-        "name" : matched_name,
-        "photo" : picture_bytes.hex(),
+        "name": matched_name,
+        "photo": picture_bytes.hex(),
     }
 
 

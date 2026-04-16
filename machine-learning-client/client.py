@@ -28,41 +28,69 @@ client = MongoClient(
 )
 db = client[mongo_dbname]
 
-os.makedirs("faculty_images", exist_ok=True)
-for member in db.faculty.find():
-    filename = member["name"].replace(" ", "_") + ".jpg"
-    filepath = os.path.join("faculty_images", filename)
-    with open(filepath, "wb") as f:
-        f.write(member["photo"])
+def dump_faculty_images(database, output_dir):
+    """
+    Pull faculty photos from database and write to disk.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    for member in database.faculty.find():
+        filename = member["name"].replace(" ", "_") + ".jpg"
+        filepath = os.path.join(output_dir, filename)
+        with open(filepath, "wb") as f:
+            f.write(member["photo"])
 
+def convert_to_name(filepath):
+    """
+    Convert a faculty image path to a readable name.
+    """
+    return os.path.basename(filepath).replace("_"," ").replace(".jpg","")
+
+def decode_image(file_bytes):
+    """
+    Decode image bytes into a numpy array.
+    """
+    return cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
+
+def find_lookalike(img):
+    """
+    Run Deepface similarity search
+    """
+    results = DeepFace.find(
+        img_path=img,
+        db_path="faculty_images/",
+        similarity_search=True,
+        k=3,
+    )
+    return results
+
+dump_faculty_images(db,"faculty_images")
 
 @app.post("/find-lookalike")
 def find():
     """
     Take image from user and compare it to NYU Courant faculty
     """
-    file_bytes_1 = request.files["img1"].read()
+    if "img1" not in request.files:
+        return {"error":"No image provided"}, 400
 
-    input_img = cv2.imdecode(np.frombuffer(file_bytes_1, np.uint8), cv2.IMREAD_COLOR)
 
-    results = DeepFace.find(
-        img_path=input_img,
-        db_path="faculty_images/",
-        similarity_search=True,
-        k=3,
-    )
+    file_bytes = request.files["img1"].read()
+    input_img = decode_image(file_bytes)
+    results = find_lookalike(input_img)
 
     top_match = results[0].iloc[0]
+    matched_name = convert_to_name(top_match["identity"])
 
-    print(top_match)
+    with open(top_match["identity"], "rb") as f:
+        picture_bytes = f.read()
+    
 
-    matched_name = (
-        os.path.basename(top_match["identity"]).replace("_", " ").replace(".jpg", "")
-    )
     # distance = top_match["distance"]
-
     print(matched_name)
-    return matched_name
+    return {
+        "name" : matched_name,
+        "photo" : picture_bytes.hex(),
+    }
 
 
 if __name__ == "__main__":

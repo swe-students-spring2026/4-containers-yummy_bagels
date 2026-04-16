@@ -41,28 +41,55 @@ def safe_filename(name):
     return normalized + ".jpg"
 
 
-os.makedirs("faculty_images", exist_ok=True)
-for member in db.faculty.find():
-    filename = safe_filename(member["name"])
-    filepath = os.path.join("faculty_images", filename)
-    with open(filepath, "wb") as f:
-        f.write(member["photo"])
+def dump_faculty_images(database, output_dir):
+    """
+    Pull faculty photos from database and write to disk.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    for member in database.faculty.find():
+        filename = member["name"].replace(" ", "_") + ".jpg"
+        filepath = os.path.join(output_dir, filename)
+        with open(filepath, "wb") as f:
+            f.write(member["photo"])
 
+def convert_to_name(filepath):
+    """
+    Convert a faculty image path to a readable name.
+    """
+    return os.path.basename(filepath).replace("_"," ").replace(".jpg","")
+
+def decode_image(file_bytes):
+    """
+    Decode image bytes into a numpy array.
+    """
+    return cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
+
+def find_lookalike(img):
+    """
+    Run Deepface similarity search
+    """
+    results = DeepFace.find(
+        img_path=img,
+        db_path="faculty_images/",
+        similarity_search=True,
+        k=3,
+    )
+    return results
+
+dump_faculty_images(db,"faculty_images")
 
 @app.post("/find-lookalike")
 def find():
     """
     Take image from user and compare it to NYU Courant faculty
     """
-    uploaded_file = request.files.get("img1")
-    if not uploaded_file:
-        return "No file uploaded", 400
+    if "img1" not in request.files:
+        return {"error":"No image provided"}, 400
 
-    file_bytes_1 = uploaded_file.read()
-    input_img = cv2.imdecode(np.frombuffer(file_bytes_1, np.uint8), cv2.IMREAD_COLOR)
 
-    if input_img is None:
-        return "Invalid image file", 400
+    file_bytes = request.files["img1"].read()
+    input_img = decode_image(file_bytes)
+    results = find_lookalike(input_img)
 
     results = DeepFace.find(
         img_path=input_img,
@@ -77,11 +104,18 @@ def find():
         return "No match found", 404
 
     top_match = results[0].iloc[0]
-    matched_name = (
-        os.path.basename(top_match["identity"]).replace("_", " ").replace(".jpg", "")
-    )
+    matched_name = convert_to_name(top_match["identity"])
+
+    with open(top_match["identity"], "rb") as f:
+        picture_bytes = f.read()
+    
+
     # distance = top_match["distance"]
-    return matched_name, 200
+    print(matched_name)
+    return {
+        "name" : matched_name,
+        "photo" : picture_bytes.hex(),
+    }
 
 
 if __name__ == "__main__":

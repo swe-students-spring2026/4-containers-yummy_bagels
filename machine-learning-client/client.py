@@ -52,7 +52,6 @@ def dump_faculty_images(database, output_dir):
         with open(filepath, "wb") as f:
             f.write(member["photo"])
 
-
 def convert_to_name(filepath):
     """
     Convert a faculty image path to a readable name.
@@ -116,7 +115,10 @@ def find():
     # distance = top_match["distance"]
     print(matched_name)
     return {
+        "name" : {
         "name": matched_name,
+        "photo" : picture_bytes.hex(),
+    },
         "photo": picture_bytes.hex(),
     }
 

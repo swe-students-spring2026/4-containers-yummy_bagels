@@ -54,11 +54,14 @@ def find():
 
     top_match = results[0].iloc[0]
 
+    print(top_match)
+
     matched_name = (
         os.path.basename(top_match["identity"]).replace("_", " ").replace(".jpg", "")
     )
     # distance = top_match["distance"]
 
+    print(matched_name)
     return matched_name
 
 

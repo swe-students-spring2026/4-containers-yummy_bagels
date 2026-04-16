@@ -12,16 +12,42 @@
     <p>Upload a selfie to find the professor you look like most.</p>
   </section>
 
-   <section id="selfie-upload-section">
+  <section id="selfie-upload-section">
     <h2>Submit Your Image</h2>
 
-    <form method="POST" enctype="multipart/form-data">
-      <input type="file" name="image" id="image" accept=".png,.jpg,.jpeg" required>
+    <form id="image-upload-form" method="POST" enctype="multipart/form-data">
+      <div class="upload-source-toggle">
+        <button type="button" class="source-option is-active" data-source="file">Upload from files</button>
+        <button type="button" class="source-option" data-source="camera">Take a photo</button>
+      </div>
+
+      <input type="hidden" name="camera_image_data" id="camera-image-data">
+
+      <div id="file-upload-panel" class="upload-panel">
+        <label for="image">Choose a PNG or JPG image</label>
+        <input type="file" name="image" id="image" accept="image/png,image/jpeg" capture="user">
+      </div>
+
+      <div id="camera-upload-panel" class="upload-panel" hidden>
+        <p>Use your device camera to take a photo and submit it from this page.</p>
+        <div class="camera-frame">
+          <video id="camera-stream" autoplay playsinline hidden></video>
+          <img id="camera-preview" alt="Captured photo preview" hidden>
+          <canvas id="camera-canvas" hidden></canvas>
+        </div>
+        <div class="camera-controls">
+          <button type="button" id="start-camera-button">Start camera</button>
+          <button type="button" id="capture-photo-button" disabled>Capture photo</button>
+          <button type="button" id="retake-photo-button" hidden>Retake photo</button>
+        </div>
+        <p id="camera-status" class="status-message" aria-live="polite"></p>
+      </div>
+
       <button type="submit">Find Face Match</button>
     </form>
 
     {% if status_message %}
-      <p>{{ status_message }}</p>
+      <p class="status-message">{{ status_message }}</p>
     {% endif %}
   </section>
 
@@ -58,4 +84,5 @@
       </div>
     </section>
   {% endif %}
+  <script src="{{ url_for('static', filename='home.js') }}" defer></script>
 {% endblock %}

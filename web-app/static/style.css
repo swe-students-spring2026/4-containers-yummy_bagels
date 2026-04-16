@@ -41,9 +41,42 @@ main {
 
 /* =================================== LOGIN / SIGNUP =================================== */
 
-main.authentication{
+main.authentication {
   margin-top: 120px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+}
+
+main.authentication form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+main.authentication input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+main.authentication button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+main.authentication a {
+  margin-top: 8px;
+  text-decoration: none;
 }

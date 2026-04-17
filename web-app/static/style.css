@@ -43,6 +43,8 @@ main {
   max-width: 960px;
   margin-left: auto;
   margin-right: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 section {
@@ -64,6 +66,10 @@ h3 {
 p {
   margin: 0 0 10px;
   color: var(--muted);
+}
+
+main.has-results #selfie-upload-section {
+  order: 99;
 }
 
 /* Forms */
@@ -236,6 +242,34 @@ main.authentication a {
 .status-message {
   color: var(--text);
   font-weight: 700;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(246, 248, 255, 0.84);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 2000;
+}
+
+.loading-card {
+  width: min(420px, 100%);
+  background: var(--surface);
+  border: 3px solid var(--accent);
+  box-shadow: 10px 10px 0 var(--accent-soft);
+  padding: 18px 16px;
+}
+
+.loading-text {
+  margin: 0;
+  color: var(--text);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
 }
 
 .camera-frame {

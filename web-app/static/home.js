@@ -1,6 +1,7 @@
 const form = document.getElementById("image-upload-form");
 
 if (form) {
+  const loadingOverlay = document.getElementById("loading-overlay");
   const buttons = document.querySelectorAll("[data-source]");
   const fileSourceButton = document.querySelector('[data-source="file"]');
   const filePanel = document.getElementById("file-upload-panel");
@@ -18,10 +19,19 @@ if (form) {
 
   let activeSource = "file";
   let mediaStream = null;
+  let isSubmitting = false;
 
   const defaultFileButtonLabel = fileSourceButton
     ? fileSourceButton.textContent.trim()
     : "Upload from files";
+
+  function showLoading(message = "finding match...") {
+    if (!loadingOverlay) return;
+    const text = loadingOverlay.querySelector(".loading-text");
+    if (text) text.textContent = message;
+    loadingOverlay.hidden = false;
+    document.body.style.cursor = "wait";
+  }
 
   function setSelectedFileName(text) {
     if (selectedFileName) selectedFileName.textContent = text;
@@ -152,6 +162,8 @@ if (form) {
   });
 
   form.addEventListener("submit", (event) => {
+    if (isSubmitting) return;
+
     const hasFile = imageInput.files.length > 0;
     const hasCameraCapture = cameraDataInput.value.length > 0;
 
@@ -161,7 +173,16 @@ if (form) {
         activeSource === "camera"
           ? "Take a photo before submitting."
           : "Choose an image file before submitting.";
+      return;
     }
+
+    event.preventDefault();
+    isSubmitting = true;
+    showLoading("finding match...");
+
+    window.setTimeout(() => {
+      form.requestSubmit();
+    }, 60);
   });
 
   window.addEventListener("beforeunload", stopCamera);

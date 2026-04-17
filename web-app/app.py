@@ -295,7 +295,6 @@ def dashboard():
             {"$set": {"email": new_email, "password": new_password}},
         )
         return redirect(url_for("dashboard"))
-    """render dashboard page"""
     return render_template("dashboard.html", user=current_user)
 
 

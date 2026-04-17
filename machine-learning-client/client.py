@@ -66,19 +66,6 @@ def decode_image(file_bytes):
     return cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
 
 
-def find_lookalike(img):
-    """
-    Run Deepface similarity search
-    """
-    results = DeepFace.find(
-        img_path=img,
-        db_path="faculty_images/",
-        similarity_search=True,
-        k=3,
-    )
-    return results
-
-
 dump_faculty_images(db, "faculty_images")
 
 
@@ -92,7 +79,6 @@ def find():
 
     file_bytes = request.files["img1"].read()
     input_img = decode_image(file_bytes)
-    results = find_lookalike(input_img)
 
     if input_img is None:
         return "Invalid image file", 400

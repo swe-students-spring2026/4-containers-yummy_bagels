@@ -4,7 +4,14 @@ import base64
 import binascii
 from io import BytesIO
 import os
-from flask import Flask, render_template, request, redirect, url_for
+import requests
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+)
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -13,6 +20,7 @@ from flask_login import (
     login_required,
     current_user,
 )
+from werkzeug.utils import secure_filename
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from dotenv import load_dotenv
@@ -23,6 +31,11 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev")
+
+# config for image uplaoding
+ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "http://localhost:5001/find-lookalike")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+ALLOWED_MIME_TYPES = {"image/png", "image/jpeg"}
 
 # MongoDB connection
 mongo_uri = os.getenv("MONGO_URI")
@@ -64,6 +77,59 @@ def load_user(user_id):
     except (InvalidId, ValueError):
         pass
     return None
+
+
+def allowed_file(filename):
+    """Returns true if the image extension is allowed (png, jpg, jpeg)"""
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def decode_camera_image(data_url):
+    """Decode a base64 camera image posted from the homepage."""
+    try:
+        header, encoded = data_url.split(",", 1)
+    except ValueError:
+        return None, None, None, "Camera image data was invalid"
+
+    if not header.startswith("data:image/"):
+        return None, None, None, "Camera image data was invalid"
+
+    mime_type = header[5:].split(";", 1)[0]
+    if mime_type not in ALLOWED_MIME_TYPES:
+        return None, None, None, "Only PNG, JPG, and JPEG files are allowed"
+
+    try:
+        image_bytes = base64.b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError):
+        return None, None, None, "Camera image data was invalid"
+
+    extension = "png" if mime_type == "image/png" else "jpg"
+    return f"camera-capture.{extension}", image_bytes, mime_type, None
+
+
+def extract_uploaded_image():
+    """Accept either a file upload or a homepage camera capture."""
+    uploaded_file = request.files.get("image")
+    if uploaded_file and uploaded_file.filename:
+        if not allowed_file(uploaded_file.filename):
+            return None, None, None, "Only PNG, JPG, and JPEG files are allowed"
+
+        image_bytes = uploaded_file.read()
+        if not image_bytes:
+            return None, None, None, "Uploaded image was empty"
+
+        return (
+            secure_filename(uploaded_file.filename),
+            image_bytes,
+            uploaded_file.mimetype or "image/jpeg",
+            None,
+        )
+
+    camera_image_data = request.form.get("camera_image_data", "").strip()
+    if camera_image_data:
+        return decode_camera_image(camera_image_data)
+
+    return None, None, None, "Please choose an image file or take a photo"
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -111,26 +177,108 @@ def logout():
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def home():
-    """render home page"""
-    uploaded_image_url = None
-    matched_professor_image_url = None
+    """Render home page and show uploaded image + matched professor image from MongoDB."""
+    uploaded_image_base64 = None
+    uploaded_image_mime = None
+    matched_professor_image_base64 = None
+    matched_professor_image_mime = "image/jpeg"
+    matched_name = None
     status_message = None
 
     if request.method == "POST":
-        action = request.form.get("action")
+        original_name, image_bytes, uploaded_image_mime, error_message = (
+            extract_uploaded_image()
+        )
 
-        if action == "submit_image":
-            # TODO: handle picture upload
-            status_message = "Image submit button clicked"
+        if error_message:
+            status_message = error_message
+            return render_template(
+                "home.html",
+                uploaded_image_base64=uploaded_image_base64,
+                uploaded_image_mime=uploaded_image_mime,
+                matched_professor_image_base64=matched_professor_image_base64,
+                matched_professor_image_mime=matched_professor_image_mime,
+                matched_name=matched_name,
+                status_message=status_message,
+            )
 
-        elif action == "find_match":
-            # TODO: send picture to ML client for match and accept returned image
-            status_message = "Find face match button clicked"
+        # if not allowed_file(uploaded_file.filename):
+        #    status_message = "Only PNG, JPG, and JPEG files are allowed"
+        #    return render_template(
+        #        "home.html",
+        #        uploaded_image_base64=uploaded_image_base64,
+        #        uploaded_image_mime=uploaded_image_mime,
+        #        matched_professor_image_base64=matched_professor_image_base64,
+        #        matched_professor_image_mime=matched_professor_image_mime,
+        #        matched_name=matched_name,
+        #        status_message=status_message,
+        #    )
+
+        # original_name = secure_filename(uploaded_file.filename)
+        # image_bytes = uploaded_file.read()
+        # uploaded_image_mime = uploaded_file.mimetype or "image/jpeg"
+
+        # store uploaded image in MongoDB
+        db.images.insert_one(
+            {
+                "user_id": current_user.id,
+                "filename": original_name,
+                "content_type": uploaded_image_mime,
+                "photo": image_bytes,
+            }
+        )
+
+        # prepare uploaded image for template
+        uploaded_image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+        try:
+            response = requests.post(
+                ML_SERVICE_URL,
+                files={
+                    "img1": (
+                        original_name,
+                        BytesIO(image_bytes),
+                        uploaded_image_mime,
+                    )
+                },
+                timeout=180,
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                matched_name = data["name"]
+
+                faculty_doc = db.faculty.find_one({"name": matched_name})
+
+                if faculty_doc and faculty_doc.get("photo"):
+                    matched_photo_bytes = bytes(faculty_doc["photo"])
+                    matched_professor_image_base64 = base64.b64encode(
+                        matched_photo_bytes
+                    ).decode("utf-8")
+
+                    # if you later store faculty content type, use that instead
+                    matched_professor_image_mime = faculty_doc.get(
+                        "content_type", "image/jpeg"
+                    )
+
+                    status_message = "Match found."
+                else:
+                    status_message = (
+                        f"Match found, but no faculty image stored for {matched_name}."
+                    )
+            else:
+                status_message = f"ML service error: {response.status_code}"
+
+        except requests.RequestException as exc:
+            status_message = f"Could not connect to ML service: {exc}"
 
     return render_template(
         "home.html",
-        uploaded_image_url=uploaded_image_url,
-        matched_professor_image_url=matched_professor_image_url,
+        uploaded_image_base64=uploaded_image_base64,
+        uploaded_image_mime=uploaded_image_mime,
+        matched_professor_image_base64=matched_professor_image_base64,
+        matched_professor_image_mime=matched_professor_image_mime,
+        matched_name=matched_name,
         status_message=status_message,
     )
 
@@ -149,25 +297,6 @@ def dashboard():
         return redirect(url_for("dashboard"))
     """render dashboard page"""
     return render_template("dashboard.html", user=current_user)
-
-
-# for returning faculty images
-@app.route("/faculty-images/<path:filename>")
-@login_required
-def faculty_image(filename):
-    """Serve faculty images from the machine-learning-client folder."""
-    return send_from_directory(FACULTY_IMAGE_FOLDER, filename)
-
-
-# helper for file renaming
-def safe_faculty_filename(name):
-    """Convert professor name to the image filename used on disk."""
-    normalized = (
-        unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
-    )
-    normalized = normalized.replace(" ", "_")
-    normalized = re.sub(r"[^A-Za-z0-9_-]", "", normalized)
-    return normalized + ".jpg"
 
 
 if __name__ == "__main__":

@@ -62,6 +62,7 @@ class User(UserMixin):
     def __init__(self, user):
         self.id = user["_id"]
         self.email = user["email"]
+        self.password = user["password"]
 
 
 @login_manager.user_loader
@@ -282,11 +283,20 @@ def home():
     )
 
 
-@app.route("/dashboard")
+@app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
+    """updates user login info"""
+    if request.method == "POST":
+        new_email = request.form.get("email", "").strip()
+        new_password = request.form.get("password", "").strip()
+        db.users.update_one(
+            {"_id": ObjectId(current_user.id)},
+            {"$set": {"email": new_email, "password": new_password}},
+        )
+        return redirect(url_for("dashboard"))
     """render dashboard page"""
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", user=current_user)
 
 
 if __name__ == "__main__":

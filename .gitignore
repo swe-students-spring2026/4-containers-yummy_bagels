@@ -151,6 +151,3 @@ machine-learning-client/tests/faculty_images/
 
 # Cython debug symbols
 cython_debug/
-
-# docker compose for testing
-docker-compose.yml

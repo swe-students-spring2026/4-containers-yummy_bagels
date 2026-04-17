@@ -3,6 +3,34 @@ body {
   font-family: Arial, sans-serif;
 }
 
+/* general input textbox */
+input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+/* general form */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
 /* NAVBAR */
 .navbar {
   position: fixed;
@@ -35,6 +63,7 @@ body {
 /* offset for navbar when logged in*/
 main {
   margin-top: 60px; /* navbar height */
+  left: 60px;
 }
 
 /* =================================== LOGIN / SIGNUP =================================== */

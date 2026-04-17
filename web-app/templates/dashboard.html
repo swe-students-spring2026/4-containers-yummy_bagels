@@ -2,14 +2,21 @@
 
 {% block content %}
 <section name="Dashboard">
-    <h2>Dashboard</h2>
-</section>
-<div style="width:100px; height: 100px; background-color: gray;"></div>
-<p>my profile goes here!</p>
-<h3>name</h3>
-<button>upload profile picture</button>
-<button>edit name</button>
+    <h1>Dashboard</h1>
+    <form method="POST">
+        <label for="email">Email</label>
+        <input id="email" name="email" value="{{user.email}}">
 
-<p>------------------------------</p>
-<h3>Upload History</h3>
+        <label for="password">Password</label>
+        <input id="password" name="password" value="{{user.password}}">
+    
+        <button type="submit">save</button>
+    </form>
+</section>
+
+<section>
+    <p>------------------------------</p>
+    <h3>Upload History</h3>
+</section>
+
 {% endblock %}

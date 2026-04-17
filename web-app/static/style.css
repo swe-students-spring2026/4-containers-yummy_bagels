@@ -16,7 +16,7 @@ body {
   align-items: center;
   padding: 12px 20px;
   box-sizing: border-box;
-  z-index: 1000;          
+  z-index: 1000;
 }
 
 /* nav-button(left aligned) */
@@ -31,8 +31,6 @@ body {
 .nav-left a:hover {
   text-decoration: underline;
 }
-
-
 
 /* offset for navbar when logged in*/
 main {

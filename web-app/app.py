@@ -43,6 +43,7 @@ ALLOWED_MIME_TYPES = {"image/png", "image/jpeg"}
 # config for saving user session images
 BASE_DIR = Path(__file__).resolve().parent
 UPLOAD_HISTORY_DIR = BASE_DIR / "static" / "upload_history"
+UPLOAD_HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 
 # MongoDB connection
 mongo_uri = os.getenv("MONGO_URI")
@@ -350,7 +351,7 @@ def save_history_entry(user_email, original_name, uploaded_mime, uploaded_bytes,
     """
     Save one lookalike search attempt as:
     - uploaded image file
-    - matched image file (if present in ML response)
+    - matched image file
     - result.json
     Returns the saved record dict.
     """
@@ -390,7 +391,7 @@ def save_history_entry(user_email, original_name, uploaded_mime, uploaded_bytes,
 
     record = {
         "timestamp": timestamp,
-        "requested_at": datetime.now().isoformat(),
+        "requested_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "original_filename": original_name,
         "uploaded_image": {
             "path": uploaded_image_relpath,

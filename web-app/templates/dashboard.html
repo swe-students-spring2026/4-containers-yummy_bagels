@@ -87,6 +87,34 @@
     <p>No upload history yet.</p>
     {% endif %}
 </section>
+<button
+    type="button"
+    class="help-fab"
+    aria-label="Open field descriptions"
+    onclick="openModal('help-modal')"
+>
+    ?
+</button>
+<div id="help-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('help-modal')">&times;</span>
+        <h2>Field Descriptions</h2>
+        <div class="modal-info">
+            <p><strong>Model:</strong> The face recognition model used by the ML service to compare faces.</p>
+            <p><strong>Distance metric:</strong> The mathematical method used to measure how close two face embeddings are. For example, cosine distance.</p>
+            <p><strong>Distance:</strong> The raw difference score between the uploaded face and the matched professor face. Smaller usually means more similar.</p>
+            <p><strong>Threshold:</strong> The cutoff value used to decide whether the comparison counts as a match. If distance is below or equal to this value, it is treated as a match.</p>
+            <p><strong>Confidence:</strong> A confidence-related value returned by the ML library. Depending on the library version, this may be approximate rather than a calibrated probability.</p>
+            <p><strong>Similarity score:</strong> A user-friendly score derived for display. Higher means more similar. This is mainly for presentation, not a strict scientific probability.</p>
+            <p><strong>Is match:</strong> Whether the system judged the uploaded image and professor image to be a valid match under the threshold rule.</p>
+            <p><strong>Source face box:</strong> The detected face region in the uploaded image, usually stored as x, y, width, and height.</p>
+            <p><strong>Target face box:</strong> The detected face region in the matched professor image, usually stored as x, y, width, and height.</p>
+            <p><strong>Requested at:</strong> The time when that upload attempt was made.</p>
+            <p><strong>Original filename:</strong> The original name of the uploaded image file.</p>
+            <p><strong>Matched name:</strong> The professor name returned as the best match.</p>
+        </div>
+    </div>
+</div>
 
 <!-- clicking modal -->
 <script>

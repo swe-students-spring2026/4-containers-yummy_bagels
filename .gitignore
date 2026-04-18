@@ -143,10 +143,6 @@ dmypy.json
 machine-learning-client/faculty_images/
 machine-learning-client/tests/faculty_images/
 
-# User Images
-web-app/static/upload_history/*
-!web-app/static/upload_history/.keep
-
 # Pyre type checker
 .pyre/
 

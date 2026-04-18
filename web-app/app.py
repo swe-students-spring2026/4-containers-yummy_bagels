@@ -4,7 +4,6 @@ import base64
 import mimetypes
 import binascii
 from io import BytesIO
-import json
 import os
 from pathlib import Path
 from datetime import datetime

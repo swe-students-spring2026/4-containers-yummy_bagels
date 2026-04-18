@@ -5,18 +5,106 @@
     <h1>Dashboard</h1>
     <form method="POST">
         <label for="email">Email</label>
-        <input id="email" name="email" value="{{user.email}}">
-
-        <label for="password">Password</label>
-        <input id="password" name="password" value="{{user.password}}">
-    
-        <button type="submit">save</button>
+        <p id="email" name="email">{{user.email}}</p>
     </form>
 </section>
 
 <section>
-    <p>------------------------------</p>
     <h3>Upload History</h3>
+    <p>------------------------------</p>
+    {% if history_entries %}
+    <div class = "history-grid">
+        {% for entry in history_entries %}
+        <div class="history-card" onclick="openModal('modal-{{ loop.index}}')">
+            <img 
+                src="{{ url_for('static', filename=entry.uploaded_image.path) }}"
+                alt="Uploaded image"
+                class="history-thumb"
+            >
+            <div class="history-meta">
+                <p><strong>{{ entry.match_result.name or "No match" }}</strong></p>
+                <p>{{ entry.requested_at }}</p>
+                {% if entry.match_result.similarity_score is not none %}
+                <p>Similarity: {{ "%.2f"|format(entry.match_result.similarity_score) }}%</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div id="modal-{{ loop.index }}" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeModal('modal-{{ loop.index }}')">&times;</span>
+
+                <h2>Upload Attempt Details</h2>
+
+                <div clas="modal-images">
+                    <div>
+                        <h4>Uploaded Image</h4>
+                        <img
+                            src="{{ url_for('static', filename=entry.uploaded_image.path) }}"
+                            alt="Uploaded image"
+                            class="modal-image"
+                        >
+                    </div>
+                    <div>
+                        <h4>Matched Professor</h4>
+                        {% if entry.match_result.matched_image_path %}
+                        <img
+                            src="{{ url_for('static', filename=entry.match_result.matched_image_path) }}"
+                            alt="Matched professor image"
+                            class="modal-image"
+                        >
+                        {% else %}
+                        <p>No matched professor image saved.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="modal-info">
+                    <p><strong>Requested at:</strong> {{ entry.requested_at }}</p>
+                    <p><strong>Original filename:</strong> {{ entry.original_filename }}</p>
+                    <p><strong>Matched name:</strong> {{ entry.match_result.name }}</p>
+                    <p><strong>Model:</strong> {{ entry.match_result.model }}</p>
+                    <p><strong>Distance metric:</strong> {{ entry.match_result.distance_metric }}</p>
+                    <p><strong>Distance:</strong> {{ entry.match_result.distance }}</p>
+                    <p><strong>Threshold:</strong> {{ entry.match_result.threshold }}</p>
+                    <p><strong>Confidence:</strong> {{ entry.match_result.confidence }}</p>
+                    <p><strong>Similarity score:</strong> {{ entry.match_result.similarity_score }}</p>
+                    <p><strong>Is match:</strong> {{ entry.match_result.is_match }}</p>
+
+                    {% if entry.match_result.source_face_box %}
+                    <p><strong>Source face box:</strong> {{ entry.match_result.source_face_box }}</p>
+                    {% endif %}
+
+                    {% if entry.match_result.target_face_box %}
+                    <p><strong>Target face box:</strong> {{ entry.match_result.target_face_box }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No upload history yet.</p>
+    {% endif %}
 </section>
 
+<!-- clicking modal -->
+<script>
+function openModal(id) {
+    document.getElementById(id).style.display = "block";
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = "none";
+}
+
+window.onclick = function(event) {
+    const modals = document.querySelectorAll(".modal");
+    modals.forEach((modal) => {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    });
+};
+</script>
 {% endblock %}

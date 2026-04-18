@@ -16,6 +16,9 @@
           <a href="/">Home</a>
           <a href="/dashboard">Dashboard</a>
         </div>
+        <div class="nav-right">
+          <a class="nav-logout" href="{{ url_for('logout') }}">Logout</a>
+        </div>
       </nav>
       {% endif %}
     {% endblock %}

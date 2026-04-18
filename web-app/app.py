@@ -1,9 +1,13 @@
 """Web app for the project"""
 
 import base64
+import mimetypes
 import binascii
 from io import BytesIO
+import json
 import os
+from pathlib import Path
+from datetime import datetime
 import requests
 from flask import (
     Flask,
@@ -36,6 +40,10 @@ app.secret_key = os.getenv("SECRET_KEY", "dev")
 ML_SERVICE_URL = os.getenv("ML_SERVICE_URL", "http://localhost:5001/find-lookalike")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 ALLOWED_MIME_TYPES = {"image/png", "image/jpeg"}
+# config for saving user session images
+BASE_DIR = Path(__file__).resolve().parent
+UPLOAD_HISTORY_DIR = BASE_DIR / "static" / "upload_history"
+UPLOAD_HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 
 # MongoDB connection
 mongo_uri = os.getenv("MONGO_URI")
@@ -177,7 +185,8 @@ def logout():
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def home():
-    """Render home page and show uploaded image + matched professor image from MongoDB."""
+    """Render home page and show uploaded image + matched professor image from MongoDB.
+    saves history."""
     uploaded_image_base64 = None
     uploaded_image_mime = None
     matched_professor_image_base64 = None
@@ -202,29 +211,13 @@ def home():
                 status_message=status_message,
             )
 
-        # if not allowed_file(uploaded_file.filename):
-        #    status_message = "Only PNG, JPG, and JPEG files are allowed"
-        #    return render_template(
-        #        "home.html",
-        #        uploaded_image_base64=uploaded_image_base64,
-        #        uploaded_image_mime=uploaded_image_mime,
-        #        matched_professor_image_base64=matched_professor_image_base64,
-        #        matched_professor_image_mime=matched_professor_image_mime,
-        #        matched_name=matched_name,
-        #        status_message=status_message,
-        #    )
-
-        # original_name = secure_filename(uploaded_file.filename)
-        # image_bytes = uploaded_file.read()
-        # uploaded_image_mime = uploaded_file.mimetype or "image/jpeg"
-
-        # store uploaded image in MongoDB
         db.images.insert_one(
             {
                 "user_id": current_user.id,
                 "filename": original_name,
                 "content_type": uploaded_image_mime,
                 "photo": image_bytes,
+                "created_at": datetime.now(),
             }
         )
 
@@ -248,26 +241,55 @@ def home():
                 data = response.json()
                 matched_name = data["name"]
 
-                faculty_doc = db.faculty.find_one({"name": matched_name})
-
-                if faculty_doc and faculty_doc.get("photo"):
-                    matched_photo_bytes = bytes(faculty_doc["photo"])
+                # prefer image returned by ML service
+                if data.get("photo"):
+                    matched_photo_bytes = bytes.fromhex(data["photo"])
                     matched_professor_image_base64 = base64.b64encode(
                         matched_photo_bytes
                     ).decode("utf-8")
-
-                    # if you later store faculty content type, use that instead
-                    matched_professor_image_mime = faculty_doc.get(
-                        "content_type", "image/jpeg"
+                    matched_professor_image_mime = data.get(
+                        "matched_photo_mime", "image/jpeg"
                     )
-
                     status_message = "Match found."
                 else:
-                    status_message = (
-                        f"Match found, but no faculty image stored for {matched_name}."
-                    )
+                    # fallback mongo collection if needed
+                    faculty_doc = db.faculty.find_one({"name": matched_name})
+
+                    if faculty_doc and faculty_doc.get("photo"):
+                        matched_photo_bytes = bytes(faculty_doc["photo"])
+                        matched_professor_image_base64 = base64.b64encode(
+                            matched_photo_bytes
+                        ).decode("utf-8")
+
+                        # if you later store faculty content type, use that instead
+                        matched_professor_image_mime = faculty_doc.get(
+                            "content_type", "image/jpeg"
+                        )
+
+                        status_message = "Match found."
+                    else:
+                        status_message = (
+                            f"ML service error: {response.status_code} - {error_text}"
+                        )
+
+                save_history_entry(
+                    user_email=current_user.email,
+                    original_name=original_name,
+                    uploaded_mime=uploaded_image_mime,
+                    uploaded_bytes=image_bytes,
+                    ml_data=data,
+                )
+
             else:
-                status_message = f"ML service error: {response.status_code}"
+                try:
+                    error_data = response.json()
+                    error_text = error_data.get("error", "Unknown ML error")
+                except ValueError:
+                    error_text = response.text or "Unknown ML error"
+
+                status_message = (
+                    f"ML service error: {response.status_code} - {error_text}"
+                )
 
         except requests.RequestException as exc:
             status_message = f"Could not connect to ML service: {exc}"
@@ -286,16 +308,148 @@ def home():
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
-    """updates user login info"""
-    if request.method == "POST":
-        new_email = request.form.get("email", "").strip()
-        new_password = request.form.get("password", "").strip()
-        db.users.update_one(
-            {"_id": ObjectId(current_user.id)},
-            {"$set": {"email": new_email, "password": new_password}},
-        )
-        return redirect(url_for("dashboard"))
-    return render_template("dashboard.html", user=current_user)
+    """Show user info and upload history"""
+    # No more post
+    # if request.method == "POST":
+    #     new_email = request.form.get("email", "").strip()
+    #     new_password = request.form.get("password", "").strip()
+    #     db.users.update_one(
+    #         {"_id": ObjectId(current_user.id)},
+    #         {"$set": {"email": new_email, "password": new_password}},
+    #     )
+    #     return redirect(url_for("dashboard"))
+    history_entries = load_user_history(current_user.email)
+
+    return render_template(
+        "dashboard.html", user=current_user, history_entries=history_entries
+    )
+
+
+# ======================== helper functions for history saving =========================
+def safe_email_dir(email):
+    """Convert email into a filesystem-safe folder name"""
+    return secure_filename(email.replace("@", "_at_"))
+
+
+def guess_extension(content_type, original_name=None):
+    """Guess file extension from MIME type or original filename"""
+    if original_name and "." in original_name:
+        ext = os.path.splitext(original_name)[1].lower()
+        if ext:
+            return ext
+
+    ext = mimetypes.guess_extension(content_type or "")
+    if ext == ".jpe":
+        return ".jpg"
+    return ext or ".bin"
+
+
+def ensure_user_history_dir(email):
+    """Return user history directory, creating it if needed"""
+    user_dir = UPLOAD_HISTORY_DIR / safe_email_dir(email)
+    user_dir.mkdir(parents=True, exist_ok=True)
+    return user_dir
+
+
+def save_history_entry(
+    user_email, original_name, uploaded_mime, uploaded_bytes, ml_data
+):
+    """
+    Save one lookalike search attempt as:
+    - uploaded image file
+    - matched image file
+    - result.json
+    Returns the saved record dict.
+    """
+    user_dir = ensure_user_history_dir(user_email)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    entry_dir = user_dir / timestamp
+    entry_dir.mkdir(parents=True, exist_ok=True)
+
+    uploaded_ext = guess_extension(uploaded_mime, original_name)
+    uploaded_filename = f"uploaded{uploaded_ext}"
+    uploaded_path = entry_dir / uploaded_filename
+
+    with open(uploaded_path, "wb") as f:
+        f.write(uploaded_bytes)
+
+    matched_image_relpath = None
+    matched_image_mime = None
+
+    photo_hex = ml_data.get("photo")
+    if photo_hex:
+        matched_image_bytes = bytes.fromhex(photo_hex)
+        matched_image_mime = ml_data.get("matched_photo_mime", "image/jpeg")
+        matched_ext = guess_extension(matched_image_mime)
+        matched_filename = f"matched{matched_ext}"
+        matched_path = entry_dir / matched_filename
+
+        with open(matched_path, "wb") as f:
+            f.write(matched_image_bytes)
+
+        matched_image_relpath = str(
+            matched_path.relative_to(BASE_DIR / "static")
+        ).replace("\\", "/")
+
+    uploaded_image_relpath = str(
+        uploaded_path.relative_to(BASE_DIR / "static")
+    ).replace("\\", "/")
+
+    record = {
+        "timestamp": timestamp,
+        "requested_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "original_filename": original_name,
+        "uploaded_image": {
+            "path": uploaded_image_relpath,
+            "content_type": uploaded_mime,
+        },
+        "match_result": {
+            "name": ml_data.get("name"),
+            "model": ml_data.get("model"),
+            "distance_metric": ml_data.get("distance_metric"),
+            "distance": ml_data.get("distance"),
+            "threshold": ml_data.get("threshold"),
+            "confidence": ml_data.get("confidence"),
+            "similarity_score": ml_data.get("similarity_score"),
+            "is_match": ml_data.get("is_match"),
+            "source_face_box": ml_data.get("source_face_box"),
+            "target_face_box": ml_data.get("target_face_box"),
+            "matched_image_path": matched_image_relpath,
+            "matched_image_mime": matched_image_mime,
+        },
+    }
+
+    json_path = entry_dir / "result.json"
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(record, f, indent=2, ensure_ascii=False)
+
+    return record
+
+
+def load_user_history(user_email):
+    """Load all saved history entries for a user, newest first"""
+    user_dir = ensure_user_history_dir(user_email)
+    entries = []
+
+    for entry_dir in user_dir.iterdir():
+        if not entry_dir.is_dir():
+            continue
+
+        json_path = entry_dir / "result.json"
+        if not json_path.exists():
+            continue
+
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                record = json.load(f)
+
+            record["entry_id"] = entry_dir.name
+            entries.append(record)
+        except (json.JSONDecodeError, OSError):
+            continue
+
+    entries.sort(key=lambda item: item.get("timestamp", ""), reverse=True)
+    return entries
 
 
 if __name__ == "__main__":

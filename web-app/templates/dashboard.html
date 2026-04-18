@@ -5,18 +5,134 @@
     <h1>Dashboard</h1>
     <form method="POST">
         <label for="email">Email</label>
-        <input id="email" name="email" value="{{user.email}}">
-
-        <label for="password">Password</label>
-        <input id="password" name="password" value="{{user.password}}">
-    
-        <button type="submit">save</button>
+        <p id="email" name="email">{{user.email}}</p>
     </form>
 </section>
 
 <section>
-    <p>------------------------------</p>
     <h3>Upload History</h3>
-</section>
+    <p>------------------------------</p>
+    {% if history_entries %}
+    <div class = "history-grid">
+        {% for entry in history_entries %}
+        <div class="history-card" onclick="openModal('modal-{{ loop.index}}')">
+            <img 
+                src="{{ url_for('static', filename=entry.uploaded_image.path) }}"
+                alt="Uploaded image"
+                class="history-thumb"
+            >
+            <div class="history-meta">
+                <p><strong>{{ entry.match_result.name or "No match" }}</strong></p>
+                <p>{{ entry.requested_at }}</p>
+                {% if entry.match_result.similarity_score is not none %}
+                <p>Similarity: {{ "%.2f"|format(entry.match_result.similarity_score) }}%</p>
+                {% endif %}
+            </div>
+        </div>
 
+        <div id="modal-{{ loop.index }}" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeModal('modal-{{ loop.index }}')">&times;</span>
+
+                <h2>Upload Attempt Details</h2>
+
+                <div clas="modal-images">
+                    <div>
+                        <h4>Uploaded Image</h4>
+                        <img
+                            src="{{ url_for('static', filename=entry.uploaded_image.path) }}"
+                            alt="Uploaded image"
+                            class="modal-image"
+                        >
+                    </div>
+                    <div>
+                        <h4>Matched Professor</h4>
+                        {% if entry.match_result.matched_image_path %}
+                        <img
+                            src="{{ url_for('static', filename=entry.match_result.matched_image_path) }}"
+                            alt="Matched professor image"
+                            class="modal-image"
+                        >
+                        {% else %}
+                        <p>No matched professor image saved.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="modal-info">
+                    <p><strong>Requested at:</strong> {{ entry.requested_at }}</p>
+                    <p><strong>Original filename:</strong> {{ entry.original_filename }}</p>
+                    <p><strong>Matched name:</strong> {{ entry.match_result.name }}</p>
+                    <p><strong>Model:</strong> {{ entry.match_result.model }}</p>
+                    <p><strong>Distance metric:</strong> {{ entry.match_result.distance_metric }}</p>
+                    <p><strong>Distance:</strong> {{ entry.match_result.distance }}</p>
+                    <p><strong>Threshold:</strong> {{ entry.match_result.threshold }}</p>
+                    <p><strong>Confidence:</strong> {{ entry.match_result.confidence }}</p>
+                    <p><strong>Similarity score:</strong> {{ entry.match_result.similarity_score }}</p>
+                    <p><strong>Is match:</strong> {{ entry.match_result.is_match }}</p>
+
+                    {% if entry.match_result.source_face_box %}
+                    <p><strong>Source face box:</strong> {{ entry.match_result.source_face_box }}</p>
+                    {% endif %}
+
+                    {% if entry.match_result.target_face_box %}
+                    <p><strong>Target face box:</strong> {{ entry.match_result.target_face_box }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No upload history yet.</p>
+    {% endif %}
+</section>
+<button
+    type="button"
+    class="help-fab"
+    aria-label="Open field descriptions"
+    onclick="openModal('help-modal')"
+>
+    ?
+</button>
+<div id="help-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('help-modal')">&times;</span>
+        <h2>Field Descriptions</h2>
+        <div class="modal-info">
+            <p><strong>Model:</strong> The face recognition model used by the ML service to compare faces.</p>
+            <p><strong>Distance metric:</strong> The mathematical method used to measure how close two face embeddings are. For example, cosine distance.</p>
+            <p><strong>Distance:</strong> The raw difference score between the uploaded face and the matched professor face. Smaller usually means more similar.</p>
+            <p><strong>Threshold:</strong> The cutoff value used to decide whether the comparison counts as a match. If distance is below or equal to this value, it is treated as a match.</p>
+            <p><strong>Confidence:</strong> A confidence-related value returned by the ML library. Depending on the library version, this may be approximate rather than a calibrated probability.</p>
+            <p><strong>Similarity score:</strong> A user-friendly score derived for display. Higher means more similar. This is mainly for presentation, not a strict scientific probability.</p>
+            <p><strong>Is match:</strong> Whether the system judged the uploaded image and professor image to be a valid match under the threshold rule.</p>
+            <p><strong>Source face box:</strong> The detected face region in the uploaded image, usually stored as x, y, width, and height.</p>
+            <p><strong>Target face box:</strong> The detected face region in the matched professor image, usually stored as x, y, width, and height.</p>
+            <p><strong>Requested at:</strong> The time when that upload attempt was made.</p>
+            <p><strong>Original filename:</strong> The original name of the uploaded image file.</p>
+            <p><strong>Matched name:</strong> The professor name returned as the best match.</p>
+        </div>
+    </div>
+</div>
+
+<!-- clicking modal -->
+<script>
+function openModal(id) {
+    document.getElementById(id).style.display = "block";
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = "none";
+}
+
+window.onclick = function(event) {
+    const modals = document.querySelectorAll(".modal");
+    modals.forEach((modal) => {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    });
+};
+</script>
 {% endblock %}

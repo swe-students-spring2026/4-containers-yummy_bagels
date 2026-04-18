@@ -83,15 +83,15 @@ def find():
 
     if input_img is None:
         return "Invalid image file", 400
-    
+
     model_name = "VGG-Face"
     distance_metric = "cosine"
 
     results = DeepFace.find(
         img_path=input_img,
         db_path="faculty_images/",
-        model_name = model_name,
-        distance_metric = distance_metric,
+        model_name=model_name,
+        distance_metric=distance_metric,
         # similarity_search=True,
         # k=3,
         silent=True,
@@ -117,7 +117,7 @@ def find():
     if distance is not None and threshold not in (None, 0):
         similarity_score = max(0.0, min(100.0, (1 - distance / threshold) * 100))
 
-    return{
+    return {
         "name": matched_name,
         "photo": picture_bytes.hex(),
         "matched_photo_mime": "image/jpeg",
@@ -127,20 +127,20 @@ def find():
         "threshold": threshold,
         "confidence": confidence,
         "similarity_score": similarity_score,
-
-        "is_match": distance is not None and threshold is not None and distance <= threshold,
-
+        "is_match": distance is not None
+        and threshold is not None
+        and distance <= threshold,
         "source_face_box": {
-            "x": int(top_match['source_x']) if "source_x" in top_match else None,
-            "y": int(top_match['source_y']) if "source_y" in top_match else None,
-            "w": int(top_match['source_w']) if "source_w" in top_match else None,
-            "h": int(top_match['source_h']) if "source_h" in top_match else None,
+            "x": int(top_match["source_x"]) if "source_x" in top_match else None,
+            "y": int(top_match["source_y"]) if "source_y" in top_match else None,
+            "w": int(top_match["source_w"]) if "source_w" in top_match else None,
+            "h": int(top_match["source_h"]) if "source_h" in top_match else None,
         },
         "target_face_box": {
-            "x": int(top_match['target_x']) if "target_x" in top_match else None,
-            "y": int(top_match['target_y']) if "target_y" in top_match else None,
-            "w": int(top_match['target_w']) if "target_w" in top_match else None,
-            "h": int(top_match['target_h']) if "target_h" in top_match else None,
+            "x": int(top_match["target_x"]) if "target_x" in top_match else None,
+            "y": int(top_match["target_y"]) if "target_y" in top_match else None,
+            "w": int(top_match["target_w"]) if "target_w" in top_match else None,
+            "h": int(top_match["target_h"]) if "target_h" in top_match else None,
         },
     }
 

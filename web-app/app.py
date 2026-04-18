@@ -269,12 +269,12 @@ def home():
                         status_message = "Match found."
                     else:
                         status_message = (
-                            f"Match found, but no faculty image stored for {matched_name}."
+                            f"ML service error: {response.status_code} - {error_text}"
                         )
-                
+
                 save_history_entry(
-                    user_email = current_user.email,
-                    original_name = original_name,
+                    user_email=current_user.email,
+                    original_name=original_name,
                     uploaded_mime=uploaded_image_mime,
                     uploaded_bytes=image_bytes,
                     ml_data=data,
@@ -282,12 +282,14 @@ def home():
 
             else:
                 try:
-                    error_data = response.json()    
+                    error_data = response.json()
                     error_text = error_data.get("error", "Unknown ML error")
                 except ValueError:
                     error_text = response.text or "Unknown ML error"
 
-                status_message = f"ML service error: {response.status_code} - {error_text}"
+                status_message = (
+                    f"ML service error: {response.status_code} - {error_text}"
+                )
 
         except requests.RequestException as exc:
             status_message = f"Could not connect to ML service: {exc}"
@@ -318,7 +320,9 @@ def dashboard():
     #     return redirect(url_for("dashboard"))
     history_entries = load_user_history(current_user.email)
 
-    return render_template("dashboard.html", user=current_user, history_entries=history_entries)
+    return render_template(
+        "dashboard.html", user=current_user, history_entries=history_entries
+    )
 
 
 # ======================== helper functions for history saving =========================
@@ -347,7 +351,9 @@ def ensure_user_history_dir(email):
     return user_dir
 
 
-def save_history_entry(user_email, original_name, uploaded_mime, uploaded_bytes, ml_data):
+def save_history_entry(
+    user_email, original_name, uploaded_mime, uploaded_bytes, ml_data
+):
     """
     Save one lookalike search attempt as:
     - uploaded image file
@@ -444,6 +450,7 @@ def load_user_history(user_email):
 
     entries.sort(key=lambda item: item.get("timestamp", ""), reverse=True)
     return entries
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000, host="0.0.0.0")

@@ -329,19 +329,18 @@ main.authentication a {
 }
 
 /* =================================== Dashboard =================================== */
-.user-info{
+.user-info {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px 16px;
-  max-width: 880px; 
+
+  max-width: 880px;
+  margin: 0 auto;
 }
 
-.user-info input {
-  width: 100%;
-}
-.user-info button{
+.user-info button {
   grid-column: span 2;
-  width: auto; 
+  width: auto;
   justify-self: end;
 }
 

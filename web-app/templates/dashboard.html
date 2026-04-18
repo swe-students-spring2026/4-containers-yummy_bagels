@@ -17,7 +17,11 @@
         {% for entry in history_entries %}
         <div class="history-card" onclick="openModal('modal-{{ loop.index}}')">
             <img 
+                {% if entry.uploaded_image.url %}
+                src="{{ entry.uploaded_image.url }}"
+                {% else %}
                 src="{{ url_for('static', filename=entry.uploaded_image.path) }}"
+                {% endif %}
                 alt="Uploaded image"
                 class="history-thumb"
             >
@@ -40,14 +44,24 @@
                     <div>
                         <h4>Uploaded Image</h4>
                         <img
+                            {% if entry.uploaded_image.url %}
+                            src="{{ entry.uploaded_image.url }}"
+                            {% else %}
                             src="{{ url_for('static', filename=entry.uploaded_image.path) }}"
+                            {% endif %}
                             alt="Uploaded image"
                             class="modal-image"
                         >
                     </div>
                     <div>
                         <h4>Matched Professor</h4>
-                        {% if entry.match_result.matched_image_path %}
+                        {% if entry.match_result.matched_image_url %}
+                        <img
+                            src="{{ entry.match_result.matched_image_url }}"
+                            alt="Matched professor image"
+                            class="modal-image"
+                        >
+                        {% elif entry.match_result.matched_image_path %}
                         <img
                             src="{{ url_for('static', filename=entry.match_result.matched_image_path) }}"
                             alt="Matched professor image"

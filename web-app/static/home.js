@@ -1,10 +1,13 @@
 const form = document.getElementById("image-upload-form");
 
 if (form) {
+  const loadingOverlay = document.getElementById("loading-overlay");
   const buttons = document.querySelectorAll("[data-source]");
+  const fileSourceButton = document.querySelector('[data-source="file"]');
   const filePanel = document.getElementById("file-upload-panel");
   const cameraPanel = document.getElementById("camera-upload-panel");
   const imageInput = document.getElementById("image");
+  const selectedFileName = document.getElementById("selected-file-name");
   const cameraDataInput = document.getElementById("camera-image-data");
   const video = document.getElementById("camera-stream");
   const preview = document.getElementById("camera-preview");
@@ -16,6 +19,36 @@ if (form) {
 
   let activeSource = "file";
   let mediaStream = null;
+  let isSubmitting = false;
+
+  const defaultFileButtonLabel = fileSourceButton
+    ? fileSourceButton.textContent.trim()
+    : "Upload from files";
+
+  function showLoading(message = "finding match...") {
+    if (!loadingOverlay) return;
+    const text = loadingOverlay.querySelector(".loading-text");
+    if (text) text.textContent = message;
+    loadingOverlay.hidden = false;
+    document.body.style.cursor = "wait";
+  }
+
+  function setSelectedFileName(text) {
+    if (selectedFileName) selectedFileName.textContent = text;
+  }
+
+  function updateFileUi() {
+    const hasFile = imageInput.files && imageInput.files.length > 0;
+    const fileName = hasFile ? imageInput.files[0].name : null;
+
+    setSelectedFileName(hasFile ? `Selected: ${fileName}` : "No file chosen.");
+
+    if (fileSourceButton) {
+      fileSourceButton.textContent = hasFile
+        ? `Change file (${fileName})`
+        : defaultFileButtonLabel;
+    }
+  }
 
   function stopCamera() {
     if (!mediaStream) return;
@@ -48,6 +81,7 @@ if (form) {
       clearCameraCapture();
     } else {
       imageInput.value = "";
+      updateFileUi();
     }
   }
 
@@ -96,6 +130,18 @@ if (form) {
   }
 
   buttons.forEach((button) => {
+    if (button.dataset.source === "file") {
+      button.addEventListener("click", () => {
+        const wasActive = activeSource === "file";
+        setSource("file");
+        updateFileUi();
+        if (!wasActive || imageInput.files.length === 0) {
+          imageInput.click();
+        }
+      });
+      return;
+    }
+
     button.addEventListener("click", () => setSource(button.dataset.source));
   });
 
@@ -111,9 +157,13 @@ if (form) {
       clearCameraCapture();
       cameraStatus.textContent = "";
     }
+    setSource("file");
+    updateFileUi();
   });
 
   form.addEventListener("submit", (event) => {
+    if (isSubmitting) return;
+
     const hasFile = imageInput.files.length > 0;
     const hasCameraCapture = cameraDataInput.value.length > 0;
 
@@ -123,9 +173,19 @@ if (form) {
         activeSource === "camera"
           ? "Take a photo before submitting."
           : "Choose an image file before submitting.";
+      return;
     }
+
+    event.preventDefault();
+    isSubmitting = true;
+    showLoading("finding match...");
+
+    window.setTimeout(() => {
+      form.requestSubmit();
+    }, 60);
   });
 
   window.addEventListener("beforeunload", stopCamera);
   setSource("file");
+  updateFileUi();
 }

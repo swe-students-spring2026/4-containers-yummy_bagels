@@ -1,11 +1,19 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} {% block main_class %}{% if matched_name %}has-results{% endif %}{% endblock %} {% block content %}
 
 <section>
   <h1>Professor Face Match</h1>
-  <p>Upload a selfie to find the professor you look like most.</p>
+  <p class="tagline">
+    {% if matched_name %}match found{% else %}Upload a selfie to find the
+    professor you look like most.{% endif %}
+  </p>
 </section>
 
 <section id="selfie-upload-section">
+  {% if matched_name %}
+  <form method="GET" action="/">
+    <button type="submit">Resubmit</button>
+  </form>
+  {% else %}
   <h2>Submit Your Image</h2>
 
   <form id="image-upload-form" method="POST" enctype="multipart/form-data">
@@ -29,6 +37,9 @@
         accept="image/png,image/jpeg"
         capture="user"
       />
+      <p id="selected-file-name" class="selected-file-name" aria-live="polite">
+        No file chosen.
+      </p>
     </div>
 
     <div id="camera-upload-panel" class="upload-panel" hidden>
@@ -57,6 +68,7 @@
 
   {% if status_message %}
   <p class="status-message">{{ status_message }}</p>
+  {% endif %}
   {% endif %}
 </section>
 
@@ -89,5 +101,17 @@
   </div>
 </section>
 {% endif %}
+
+<div
+  id="loading-overlay"
+  class="loading-overlay"
+  hidden
+  role="status"
+  aria-live="polite"
+>
+  <div class="loading-card">
+    <p class="loading-text">finding match...</p>
+  </div>
+</div>
 <script src="{{ url_for('static', filename='home.js') }}" defer></script>
 {% endblock %}

@@ -328,7 +328,23 @@ main.authentication a {
   box-shadow: 5px 5px 0 rgba(0, 87, 255, 0.35);
 }
 
-/* dashboard */
+/* =================================== Dashboard =================================== */
+.user-info{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  max-width: 880px; 
+}
+
+.user-info input {
+  width: 100%;
+}
+.user-info button{
+  grid-column: span 2;
+  width: auto; 
+  justify-self: end;
+}
+
 .history-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));

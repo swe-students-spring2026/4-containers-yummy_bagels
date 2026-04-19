@@ -129,7 +129,7 @@ class TestImageDecoding:
         try:
             decode_image(b"")
             assert False, "Expected OpenCV error"
-        except cv2.error:
+        except cv2.error:  # pylint: disable=catching-non-exception
             assert True
 
 
@@ -324,13 +324,12 @@ def test_import_requires_mongo_uri():
     old_mongo_dbname = os.environ.pop("MONGO_DBNAME", None)
     try:
         import importlib.util
-        from unittest.mock import patch as patch_fn
 
         spec = importlib.util.spec_from_file_location("client_no_env", client_path)
         module = importlib.util.module_from_spec(spec)
         assert spec and spec.loader
         try:
-            with patch_fn("dotenv.load_dotenv", return_value=False):
+            with patch("dotenv.load_dotenv", return_value=False):
                 spec.loader.exec_module(module)
             assert False, "Expected RuntimeError due to missing MONGO_URI"
         except RuntimeError as exc:
@@ -350,6 +349,9 @@ def test_main_block_executes(tmp_path):
 
     class _EmptyFaculty:
         def find(self):
+            """
+            Docstring.
+            """
             return []
 
     class _FakeDB:

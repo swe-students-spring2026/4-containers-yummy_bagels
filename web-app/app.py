@@ -184,7 +184,7 @@ def logout():
 
 @app.route("/", methods=["GET", "POST"])
 @login_required
-def home():
+def home():  # pylint: disable=too-many-locals
     """Render home page and show uploaded image + matched professor image from MongoDB.
     saves history."""
     uploaded_image_base64 = None
@@ -306,8 +306,8 @@ def home():
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
-    """Show user info and upload history"""
-    """And allow updating email/password."""
+    """Show user info and upload history
+    and allow updating email/password."""
     message = None
 
     if request.method == "POST":

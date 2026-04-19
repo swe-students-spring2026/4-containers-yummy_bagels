@@ -1,9 +1,15 @@
+"""
+Tests for the web app.
+"""
+
+# pylint: disable=wrong-import-position,too-few-public-methods,redefined-outer-name,protected-access,duplicate-code
+
 import base64
 import os
-from pathlib import Path
 from datetime import datetime
 import importlib.util
 from io import BytesIO
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -18,15 +24,26 @@ import app as app_module
 
 
 class _InsertResult:
+    """
+    Insert Results.
+    """
+
     def __init__(self, inserted_id):
         self.inserted_id = inserted_id
 
 
 class _FakeFind:
+    """
+    Fake find.
+    """
+
     def __init__(self, docs):
         self._docs = list(docs)
 
     def sort(self, field, direction):
+        """
+        Sort.
+        """
         reverse = direction == -1
         self._docs.sort(key=lambda d: d.get(field), reverse=reverse)
         return self
@@ -36,16 +53,26 @@ class _FakeFind:
 
 
 class _FakeUploadHistory:
+    """
+    Fake upload history.
+    """
+
     def __init__(self):
         self.docs = []
 
     def insert_one(self, doc):
+        """
+        Insert one id.
+        """
         if "_id" not in doc:
             doc["_id"] = ObjectId()
         self.docs.append(doc)
         return _InsertResult(doc["_id"])
 
     def find_one(self, query):
+        """
+        Find one.
+        """
         for doc in self.docs:
             ok = True
             for key, value in query.items():
@@ -57,6 +84,9 @@ class _FakeUploadHistory:
         return None
 
     def find(self, query):
+        """
+        Finds.
+        """
         filtered = []
         for doc in self.docs:
             ok = True
@@ -71,18 +101,31 @@ class _FakeUploadHistory:
 
 @pytest.fixture
 def client():
+    """
+    Client def.
+    """
     app_module.app.config["TESTING"] = True
     return app_module.app.test_client()
 
 
 @pytest.fixture
 def fake_db(monkeypatch):
+    """
+    Fake db. Returns fake users, images, and history.
+    """
     users = []
     images = []
     upload_history_collection = _FakeUploadHistory()
 
     class FakeUsers:
+        """
+        Fake users.
+        """
+
         def find_one(self, query):
+            """
+            Finds one.
+            """
             if "email" in query:
                 for user in users:
                     if user["email"] == query["email"]:
@@ -94,30 +137,54 @@ def fake_db(monkeypatch):
             return None
 
         def insert_one(self, doc):
+            """
+            Inserts one.
+            """
             if "_id" not in doc:
                 doc["_id"] = ObjectId()
             users.append(doc)
 
         def update_one(self, query, update):
+            """
+            Updates one.
+            """
             for user in users:
                 if user["_id"] == query.get("_id"):
                     user.update(update.get("$set", {}))
 
     class FakeImages:
+        """
+        Fake images.
+        """
+
         def insert_one(self, doc):
+            """
+            Inserts one image.
+            """
             images.append(doc)
 
     class FakeFaculty:
+        """
+        Fake faculty.
+        """
+
         def __init__(self):
             self._docs = []
 
         def find_one(self, query):
+            """
+            Finds one.
+            """
             for doc in self._docs:
                 if doc.get("name") == query.get("name"):
                     return doc
             return None
 
     class FakeDB:
+        """
+        Fake db.
+        """
+
         users = FakeUsers()
         images = FakeImages()
         faculty = FakeFaculty()
@@ -135,6 +202,9 @@ def fake_db(monkeypatch):
 
 
 def _create_and_login(client, fake_db, email="user@example.com", password="pass123"):
+    """
+    Creates fake db user and logs in. Returns email, pw
+    """
     fake_db["users"].append({"_id": ObjectId(), "email": email, "password": password})
     with client:
         res = client.post("/login", data={"email": email, "password": password})
@@ -143,6 +213,9 @@ def _create_and_login(client, fake_db, email="user@example.com", password="pass1
 
 
 def test_import_requires_mongo_uri():
+    """
+    Tests import requiring mongoURI.
+    """
     app_path = Path(__file__).resolve().parents[1] / "app.py"
     old_mongo_uri = os.environ.pop("MONGO_URI", None)
     try:
@@ -161,6 +234,9 @@ def test_import_requires_mongo_uri():
 
 
 def test_helper_functions():
+    """
+    Tests all helper functions.
+    """
     assert app_module.allowed_file("photo.jpg") is True
     assert app_module.allowed_file("photo.gif") is False
 
@@ -188,6 +264,9 @@ def test_helper_functions():
 
 
 def test_home_post_without_image_shows_error(client, fake_db):
+    """
+    Tests if user posts without uploading an image.
+    """
     _create_and_login(client, fake_db)
     res = client.post("/", data={})
     assert res.status_code == 200
@@ -195,6 +274,9 @@ def test_home_post_without_image_shows_error(client, fake_db):
 
 
 def test_home_post_disallowed_extension(client, fake_db):
+    """
+    Tests if user posts unsupported extension types. (not possible)
+    """
     _create_and_login(client, fake_db)
     res = client.post(
         "/",
@@ -206,13 +288,23 @@ def test_home_post_disallowed_extension(client, fake_db):
 
 
 def test_home_post_ml_success_with_photo(client, fake_db, monkeypatch):
+    """
+    Tests post to ML.
+    """
     _create_and_login(client, fake_db)
 
     class _Resp:
+        """
+        Response class.
+        """
+
         status_code = 200
 
         @staticmethod
         def json():
+            """
+            Returns success json.
+            """
             return {
                 "name": "Prof X",
                 "photo": "00ff",
@@ -233,6 +325,9 @@ def test_home_post_ml_success_with_photo(client, fake_db, monkeypatch):
 
 
 def test_home_post_ml_error_json(client, fake_db, monkeypatch):
+    """
+    Test json error.
+    """
     _create_and_login(client, fake_db)
 
     class _Resp:
@@ -241,6 +336,9 @@ def test_home_post_ml_error_json(client, fake_db, monkeypatch):
 
         @staticmethod
         def json():
+            """
+            Return ML service error JSON.
+            """
             return {"error": "bad things"}
 
     monkeypatch.setattr(app_module.requests, "post", lambda *args, **kwargs: _Resp())
@@ -255,14 +353,24 @@ def test_home_post_ml_error_json(client, fake_db, monkeypatch):
 
 
 def test_home_post_ml_error_text(client, fake_db, monkeypatch):
+    """
+    Test error text.
+    """
     _create_and_login(client, fake_db)
 
     class _Resp:
+        """
+        Response class.
+        """
+
         status_code = 500
         text = "plain error"
 
         @staticmethod
         def json():
+            """
+            Does not return json.
+            """
             raise ValueError("not json")
 
     monkeypatch.setattr(app_module.requests, "post", lambda *args, **kwargs: _Resp())
@@ -277,9 +385,15 @@ def test_home_post_ml_error_text(client, fake_db, monkeypatch):
 
 
 def test_home_post_ml_connection_error(client, fake_db, monkeypatch):
+    """
+    Tests connectoin issue error.
+    """
     _create_and_login(client, fake_db)
 
     def _raise(*_args, **_kwargs):
+        """
+        Connection offline.
+        """
         raise requests.RequestException("offline")
 
     monkeypatch.setattr(app_module.requests, "post", _raise)
@@ -294,6 +408,9 @@ def test_home_post_ml_connection_error(client, fake_db, monkeypatch):
 
 
 def test_dashboard_post_no_changes(client, fake_db):
+    """
+    Tests dashboard post no changes.
+    """
     _create_and_login(client, fake_db, password="samepass")
     res = client.post("/dashboard", data={"password": "samepass"})
     assert res.status_code == 200
@@ -301,6 +418,9 @@ def test_dashboard_post_no_changes(client, fake_db):
 
 
 def test_dashboard_post_updates_password(client, fake_db):
+    """
+    Tests updated password.
+    """
     email, _ = _create_and_login(client, fake_db, password="oldpass")
     res = client.post("/dashboard", data={"password": "newpass"})
     assert res.status_code == 200
@@ -310,6 +430,9 @@ def test_dashboard_post_updates_password(client, fake_db):
 
 
 def test_history_image_route(client, fake_db):
+    """
+    Tests history image route.
+    """
     _create_and_login(client, fake_db)
     with client:
         # create a history record for the logged in user
@@ -344,6 +467,9 @@ def test_history_image_route(client, fake_db):
 
 
 def test_save_and_load_history_entry_helpers(client, fake_db):
+    """
+    Tests saving and loading history helper functions.
+    """
     _create_and_login(client, fake_db)
 
     with app_module.app.test_request_context("/"):

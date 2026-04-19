@@ -1,9 +1,10 @@
 # Yummy Bagels
 
-![Lint-free](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/lint.yml/badge.svg)
 
-<!-- ![ML Client Build]()
-![Web App Build]() -->
+![Lint-free](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/lint.yml/badge.svg)
+![Web App Build](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/app-test.yml/badge.svg)
+![ML Client Build](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/ml-test.yml/badge.svg)
+
 
 An application that matches a user's uploaded image to the most similar NYU professor using facial recognition.
 

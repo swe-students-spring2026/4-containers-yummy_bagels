@@ -6,7 +6,7 @@ on:
       - "web-app/**"
 
 jobs:
-  test-ml:
+  app-test:
     runs-on: ubuntu-latest
 
     defaults:

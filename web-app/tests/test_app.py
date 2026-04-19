@@ -1,8 +1,9 @@
 import pytest
 import os
 from bson import ObjectId
-os.environ["MONGO_URI"] = "mongodb://localhost:27017"
 import app as app_module
+
+os.environ["MONGO_URI"] = "mongodb://localhost:27017"
 
 
 @pytest.fixture

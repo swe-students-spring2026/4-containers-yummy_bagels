@@ -1,4 +1,4 @@
-app_mname: lint-free
+name: lint-free
 on: [push, pull_request]
 
 jobs:

@@ -319,8 +319,7 @@ def dashboard():
             message = "No changes were made."
         else:
             db.users.update_one(
-                {"_id": ObjectId(current_user.id)},
-                {"$set": {"password": new_password}}
+                {"_id": ObjectId(current_user.id)}, {"$set": {"password": new_password}}
             )
 
             updated_user = db.users.find_one({"_id": ObjectId(current_user.id)})

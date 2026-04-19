@@ -66,9 +66,6 @@ def decode_image(file_bytes):
     return cv2.imdecode(np.frombuffer(file_bytes, np.uint8), cv2.IMREAD_COLOR)
 
 
-dump_faculty_images(db, "faculty_images")
-
-
 @app.post("/find-lookalike")
 def find():
     """
@@ -146,4 +143,5 @@ def find():
 
 
 if __name__ == "__main__":
+    dump_faculty_images(db, "faculty_images")
     app.run(debug=True, port=5001, host="0.0.0.0")

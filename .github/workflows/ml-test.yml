@@ -28,10 +28,4 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run tests
-        env:
-          MONGO_URI: mongodb://localhost:27017
-          MONGO_DBNAME: test_db
-        run: |
-          cd machine-learning-client
-          pipenv run coverage run -m pytest
-          pipenv run coverage report
+        run: pytest

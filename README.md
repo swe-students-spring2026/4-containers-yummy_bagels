@@ -2,9 +2,8 @@
 
 
 ![Lint-free](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/lint.yml/badge.svg)
-![Web App Build](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/app-test.yml/badge.svg)
-![ML Client Build](https://github.com/nyu-software-engineering/containerized-app-exercise/actions/workflows/ml-test.yml/badge.svg)
-
+[![Web App Tests](https://github.com/swe-students-spring2026/4-containers-yummy_bagels/actions/workflows/app-test.yml/badge.svg)](https://github.com/swe-students-spring2026/4-containers-yummy_bagels/actions/workflows/app-test.yml)
+[![ML Client Tests](https://github.com/swe-students-spring2026/4-containers-yummy_bagels/actions/workflows/ml-test.yml/badge.svg)](https://github.com/swe-students-spring2026/4-containers-yummy_bagels/actions/workflows/ml-test.yml)
 
 An application that matches a user's uploaded image to the most similar NYU professor using facial recognition.
 

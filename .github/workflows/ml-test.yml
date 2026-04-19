@@ -22,32 +22,9 @@ jobs:
       - name: check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+      - name: Build Docker image
+        run: docker build -f dockerfile -t ml-client:ci .
 
-      - name: Show Python version
+      - name: Run tests in container
         run: |
-          which python
-          python --version
-
-      - name: Install pipenv
-        run: python -m pip install --upgrade pip pipenv
-
-      - name: Make Pipfile match matrix Python
-        run: |
-          sed -i 's/^python_version = .*/python_version = "${{ matrix.python-version }}"/' Pipfile
-          cat Pipfile
-
-      - name: Remove old lockfile
-        run: rm -f Pipfile.lock
-
-      - name: Install dependencies
-        run: python -m pipenv --python "$(which python)" install --dev
-
-      - name: Build package
-        run: python -m pipenv run python -m build
-
-      - name: Run tests
-        run: python -m pipenv run pytest
+          docker run --rm ml-client:ci sh -c "pip install --no-cache-dir pytest && pytest -v"

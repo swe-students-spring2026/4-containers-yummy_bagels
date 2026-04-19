@@ -31,7 +31,10 @@ jobs:
         run: python -m pip install --upgrade pip pipenv
 
       - name: Install dependencies
-        run: pipenv sync --dev --python "$(which python)"
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run pytest with coverage
         env:

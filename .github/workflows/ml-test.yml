@@ -2,9 +2,9 @@ name: Machine learning client - tests
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feature/ci-workflow]
   push:
-    branches: [main]
+    branches: [main, feature/ci-workflow]
 
 jobs:
   test-ml-client:

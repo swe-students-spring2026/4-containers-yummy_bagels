@@ -11,7 +11,7 @@ on:
       - ".github/workflows/app-test.yml"
 
 jobs:
-  test-web-app:
+  test-app:
     runs-on: ubuntu-latest
 
     defaults:

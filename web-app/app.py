@@ -271,7 +271,6 @@ def home():
                         status_message = "Match found."
 
                 save_history_entry(
-                    user_id = current_user.id,
                     user_email=current_user.email,
                     original_name=original_name,
                     uploaded_mime=uploaded_image_mime,
@@ -342,7 +341,7 @@ def dashboard():
 
                 message = "Profile updated successfully."
 
-    history_entries = load_user_history(current_user.id)
+    history_entries = load_user_history(current_user.email)
 
     return render_template(
         "dashboard.html",
@@ -404,7 +403,7 @@ def history_image(entry_id, kind):
 
 
 def save_history_entry(
-    user_id, user_email, original_name, uploaded_mime, uploaded_bytes, ml_data
+    user_email, original_name, uploaded_mime, uploaded_bytes, ml_data
 ):
     """
     Save search attempt to MongoDB.
@@ -447,7 +446,7 @@ def save_history_entry(
     }
     doc = {
         "user_email": user_email,
-        "user_id": user_id,
+        "user_id": current_user.id,
         "created_at": now,
         "timestamp": timestamp,
         "original_filename": original_name,
@@ -475,10 +474,10 @@ def save_history_entry(
     return record
 
 
-def load_user_history(user_id):
+def load_user_history(user_email):
     """Load all saved history entries for a user from MongoDB, newest first."""
     entries = []
-    cursor = upload_history_collection.find({"user_id": user_id}).sort(
+    cursor = upload_history_collection.find({"user_email": user_email}).sort(
         "created_at", -1
     )
 

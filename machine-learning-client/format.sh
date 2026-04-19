@@ -3,4 +3,4 @@
 set -e
 
 python3 -m pipenv run black .
-python3 -m pipenv run pylint client.py
+python3 -m pipenv run pylint client.py tests

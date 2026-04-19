@@ -307,10 +307,34 @@ def home():
 @login_required
 def dashboard():
     """Show user info and upload history"""
+    """And allow updating email/password."""
+    message = None
+
+    if request.method == "POST":
+        new_password = request.form.get("password", "")
+        current_password = current_user.password
+        password_changed = new_password != current_password
+
+        if not password_changed:
+            message = "No changes were made."
+        else:
+            db.users.update_one(
+                {"_id": ObjectId(current_user.id)}, {"$set": {"password": new_password}}
+            )
+
+            updated_user = db.users.find_one({"_id": ObjectId(current_user.id)})
+            if updated_user:
+                login_user(User(updated_user))
+
+            message = "Profile updated successfully."
+
     history_entries = load_user_history(current_user.email)
 
     return render_template(
-        "dashboard.html", user=current_user, history_entries=history_entries
+        "dashboard.html",
+        user=current_user,
+        history_entries=history_entries,
+        message=message,
     )
 
 

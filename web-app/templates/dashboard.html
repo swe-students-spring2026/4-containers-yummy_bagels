@@ -3,9 +3,22 @@
 {% block content %}
 <section name="Dashboard">
     <h1>Dashboard</h1>
-    <form method="POST">
-        <label for="email">Email</label>
-        <p id="email" name="email">{{user.email}}</p>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+    {% if error %}
+        <p>{{ error }}</p>
+    {% endif %}
+    <form method="POST" class="user-info">
+        <div>
+            <label for="email">Email</label>
+            <p id="email" name="email" type="email">{{user.email}}</p>
+        </div>
+        <div>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" value={{user.password}}>
+            <button type="submit">save changes</button>
+        </div>
     </form>
 </section>
 

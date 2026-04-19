@@ -1,6 +1,9 @@
 name: App Tests
 
 on:
+  push:
+    paths:
+      - "web-app/**"
   pull_request:
     paths:
       - "web-app/**"

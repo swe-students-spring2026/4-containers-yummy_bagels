@@ -24,10 +24,14 @@ jobs:
           pipenv shell --fancy --python $(which python)
       - name: Lint with pylint
         if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
+        working-directory: ${{ matrix.subdir }}
         # you may set pylint to ignore any files or dependencies that make no sense to lint
-        run: |
-          cd ${{ matrix.subdir }}
-          pipenv run pylint **/*.py
+        env:
+          PYTHONPATH: .
+          MONGO_URI: mongodb://localhost:27017
+          MONGO_DBNAME: test_db
+          SECRET_KEY: dev
+        run: pipenv run pylint .
       - name: Format with black
         if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
         # you may set black to ignore any files or dependencies that make no sense to format

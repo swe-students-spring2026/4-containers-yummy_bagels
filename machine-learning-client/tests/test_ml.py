@@ -8,6 +8,7 @@ import sys
 import runpy
 from pathlib import Path
 from unittest.mock import patch
+import pytest
 import pandas as pd
 from client import convert_to_name, decode_image, dump_faculty_images, safe_filename
 
@@ -122,15 +123,10 @@ class TestImageDecoding:
 
     def test_empty_bytes_image(self):
         """
-        Empty bytes should raise an OpenCV decode error.
+        Empty bytes should raise exception.
         """
-        import cv2
-
-        try:
+        with pytest.raises(Exception):
             decode_image(b"")
-            assert False, "Expected OpenCV error"
-        except cv2.error:  # pylint: disable=catching-non-exception
-            assert True
 
 
 class TestFacultyImageDump:

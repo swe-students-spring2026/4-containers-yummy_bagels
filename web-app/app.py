@@ -308,38 +308,26 @@ def home():
 def dashboard():
     """Show user info and upload history"""
     """And allow updating email/password."""
-    error = None
     message = None
 
     if request.method == "POST":
-        new_email = request.form.get("email", "").strip()
         new_password = request.form.get("password", "")
-
-        current_email = current_user.email
         current_password = current_user.password
-
-        email_changed = new_email != current_email
         password_changed = new_password != current_password
 
-        if not email_changed and not password_changed:
+        if not password_changed:
             message = "No changes were made."
         else:
-            if email_changed:
-                existing_user = db.users.find_one({"email": new_email})
-                if existing_user:
-                    error = "Email already taken."
+            db.users.update_one(
+                {"_id": ObjectId(current_user.id)},
+                {"$set": {"password": new_password}}
+            )
 
-            if error is None:
-                db.users.update_one(
-                    {"_id": ObjectId(current_user.id)},
-                    {"$set": {"email": new_email, "password": new_password}},
-                )
+            updated_user = db.users.find_one({"_id": ObjectId(current_user.id)})
+            if updated_user:
+                login_user(User(updated_user))
 
-                updated_user = db.users.find_one({"_id": ObjectId(current_user.id)})
-                if updated_user:
-                    login_user(User(updated_user))
-
-                message = "Profile updated successfully."
+            message = "Profile updated successfully."
 
     history_entries = load_user_history(current_user.email)
 
@@ -347,7 +335,6 @@ def dashboard():
         "dashboard.html",
         user=current_user,
         history_entries=history_entries,
-        error=error,
         message=message,
     )
 

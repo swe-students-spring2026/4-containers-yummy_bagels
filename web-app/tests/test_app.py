@@ -1,4 +1,5 @@
 import os
+
 os.environ["MONGO_URI"] = "mongodb://localhost:27017"
 
 import pytest
@@ -60,10 +61,9 @@ def test_signup_page(client):
 
 
 def test_signup_inserts_user(client, mock_db):
-    res = client.post("/signup", data={
-        "email": "subject1@tests.com",
-        "password": "pass123"
-    })
+    res = client.post(
+        "/signup", data={"email": "subject1@tests.com", "password": "pass123"}
+    )
 
     assert res.status_code == 302
     assert len(mock_db) == 1
@@ -72,15 +72,11 @@ def test_signup_inserts_user(client, mock_db):
 
 
 def test_signup_duplicate_email(client, mock_db):
-    client.post("/signup", data={
-        "email": "subject1@tests.com",
-        "password": "pass123"
-    })
+    client.post("/signup", data={"email": "subject1@tests.com", "password": "pass123"})
 
-    res = client.post("/signup", data={
-        "email": "subject1@tests.com",
-        "password": "pass123"
-    })
+    res = client.post(
+        "/signup", data={"email": "subject1@tests.com", "password": "pass123"}
+    )
 
     assert res.status_code == 200
     assert b"Email already taken." in res.data
@@ -89,18 +85,13 @@ def test_signup_duplicate_email(client, mock_db):
 
 def test_login_success_allows_home_access(client, mock_db):
     # add fake user directly to fake DB
-    user = {
-        "_id": ObjectId(),
-        "email": "subject1@tests.com",
-        "password": "pass123"
-    }
+    user = {"_id": ObjectId(), "email": "subject1@tests.com", "password": "pass123"}
     mock_db.append(user)
 
     with client:
-        res = client.post("/login", data={
-            "email": "subject1@tests.com",
-            "password": "pass123"
-        })
+        res = client.post(
+            "/login", data={"email": "subject1@tests.com", "password": "pass123"}
+        )
         assert res.status_code == 302
 
         home_res = client.get("/")
@@ -108,35 +99,25 @@ def test_login_success_allows_home_access(client, mock_db):
 
 
 def test_login_failure(client, mock_db):
-    user = {
-        "_id": ObjectId(),
-        "email": "subject1@tests.com",
-        "password": "pass123"
-    }
+    user = {"_id": ObjectId(), "email": "subject1@tests.com", "password": "pass123"}
     mock_db.append(user)
 
-    res = client.post("/login", data={
-        "email": "subject1@tests.com",
-        "password": "wrongpass"
-    })
+    res = client.post(
+        "/login", data={"email": "subject1@tests.com", "password": "wrongpass"}
+    )
 
     assert res.status_code == 200
     assert b"Invalid email or password." in res.data
 
 
 def test_logout_redirects_to_login(client, mock_db):
-    user = {
-        "_id": ObjectId(),
-        "email": "subject1@tests.com",
-        "password": "pass123"
-    }
+    user = {"_id": ObjectId(), "email": "subject1@tests.com", "password": "pass123"}
     mock_db.append(user)
 
     with client:
-        client.post("/login", data={
-            "email": "subject1@tests.com",
-            "password": "pass123"
-        })
+        client.post(
+            "/login", data={"email": "subject1@tests.com", "password": "pass123"}
+        )
 
         res = client.get("/logout")
         assert res.status_code == 302
@@ -144,4 +125,3 @@ def test_logout_redirects_to_login(client, mock_db):
         # after logout, home should no longer be accessible
         home_res = client.get("/")
         assert home_res.status_code == 302
-

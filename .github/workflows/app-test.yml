@@ -1,9 +1,9 @@
-name: ML Client Tests
+name: App Tests
 
 on:
   pull_request:
     paths:
-      - "machine-learning-client/**"
+      - "web-app/**"
 
 jobs:
   test-ml:
@@ -11,7 +11,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: machine-learning-client
+        working-directory: web-app
 
     steps:
       - uses: actions/checkout@v3

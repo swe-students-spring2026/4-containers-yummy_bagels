@@ -12,7 +12,8 @@ from client import convert_to_name, decode_image, dump_faculty_images
 # pylint: disable=import-outside-toplevel
 # pylint: disable=too-few-public-methods
 
-TEST_IMAGE_PATH = os.path.join(os.path.dirname(__file__), "Amos_Bloomberg.jpg")
+DB_IMAGE_PATH = os.path.join(os.path.dirname(__file__), "Amos_Bloomberg.jpg")
+TEST_IMAGE_PATH = os.path.join(os.path.dirname(__file__), "Amos_Bloomberg_input.jpg")
 with open(TEST_IMAGE_PATH, "rb") as f:
     TEST_BYTES = f.read()
 
@@ -160,7 +161,7 @@ class TestEndpoint:
             cls.flask_client = client_module.app.test_client()
             cls.client_module = client_module
 
-    @patch("client.find_lookalike")
+    @patch("client.DeepFace.find")
     def test_successfull_request(self, mock_find):
         """
         Tests POST /find-lookalike endpoint, so that a response is successful.
@@ -168,7 +169,7 @@ class TestEndpoint:
         mock_find.return_value = [
             pd.DataFrame(
                 {
-                    "identity": ["faculty_images/Amos_Bloomberg.jpg"],
+                    "identity": [DB_IMAGE_PATH],
                 }
             )
         ]
@@ -184,7 +185,7 @@ class TestEndpoint:
 
         assert response.status_code == 200
 
-    @patch("client.find_lookalike")
+    @patch("client.DeepFace.find")
     def test_returns_name_and_photo(self, mock_find):
         """
         Tests POST /find-lookalike endpoint, so that a response contains a name and photo.
@@ -192,7 +193,7 @@ class TestEndpoint:
         mock_find.return_value = [
             pd.DataFrame(
                 {
-                    "identity": ["faculty_images/Amos_Bloomberg.jpg"],
+                    "identity": [DB_IMAGE_PATH],
                 }
             )
         ]

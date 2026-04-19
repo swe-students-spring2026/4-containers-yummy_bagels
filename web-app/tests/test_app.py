@@ -1,4 +1,3 @@
-# pylint: disable=import-error,wrong-import-position,redefined-outer-name,missing-module-docstring,missing-function-docstring,missing-class-docstring,too-few-public-methods
 import os
 import pytest
 from bson import ObjectId

@@ -27,4 +27,7 @@ jobs:
 
       - name: Run tests in container
         run: |
-          docker run --rm ml-client:ci sh -c "pip install --no-cache-dir pytest && pytest -v"
+          docker run --rm \
+            -e MONGO_URI=mongodb://127.0.0.1:27017 \
+            -e MONGO_DBNAME=test_db \
+            ml-client:ci sh -c "pip install --no-cache-dir pytest && pytest -v"

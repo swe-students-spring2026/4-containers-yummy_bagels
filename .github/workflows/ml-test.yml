@@ -10,6 +10,12 @@ jobs:
   test-ml-client:
     runs-on: ubuntu-latest
 
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
     defaults:
       run:
         working-directory: machine-learning-client

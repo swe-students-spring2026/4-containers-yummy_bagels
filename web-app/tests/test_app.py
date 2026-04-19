@@ -1,5 +1,5 @@
-import pytest
 import os
+import pytest
 from bson import ObjectId
 import app as app_module
 

@@ -12,13 +12,11 @@
     <form method="POST" class="user-info">
         <div>
             <label for="email">Email</label>
-            <input id="email" name="email" type="email" value={{user.email}}>
+            <p id="email" name="email" type="email">{{user.email}}</p>
         </div>
         <div>
             <label for="password">Password</label>
             <input id="password" name="password" type="password" value={{user.password}}>
-        </div>
-        <div>
             <button type="submit">save changes</button>
         </div>
     </form>
